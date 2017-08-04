@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dip"
+        android:gravity="bottom"
+        android:layout_weight="1.2">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+            <ProgressBar
+                android:id="@+id/CheckMapUpdateProgressBar"
+                android:layout_width="24dip"
+                android:layout_height="24dip"
+                android:layout_gravity="center" />
+            <TextView
+                android:id="@+id/DownloadProgressText"
+                android:text="Checking for Map Updates..."
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="bottom|center"
+                android:layout_marginLeft="4dip" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="top"
+        android:layout_weight="1">
+        <ProgressBar
+            android:id="@+id/DownloadProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:indeterminate="false"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginLeft="40dip"
+            android:layout_marginRight="40dip"
+            android:progress="0"
+            android:max="100"
+            android:visibility="invisible" />
+    </LinearLayout>
+</LinearLayout>
