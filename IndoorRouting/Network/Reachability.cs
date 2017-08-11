@@ -24,7 +24,7 @@ namespace IndoorRouting
     {
         internal static bool IsNetworkAvailable()
         {
-            return IsNetworkAvailableInternal();
+            return IsNetworkAvailableImpl();
         }
     }
 }

@@ -30,7 +30,7 @@ namespace IndoorRouting
 {
     internal static partial class Reachability
     {
-        public static bool IsNetworkAvailableInternal()
+        private static bool IsNetworkAvailableImpl()
         {
             return true;
         }

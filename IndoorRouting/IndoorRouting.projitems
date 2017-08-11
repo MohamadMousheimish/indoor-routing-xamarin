@@ -10,7 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AppSettings.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Helpers\Reachability.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Network\DownloadProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Network\Reachability.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Structures\CoordinatesKeyValuePair.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\LocationViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\MapViewModel.cs" />
@@ -19,6 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\LabelsViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Network\" />
     <Folder Include="$(MSBuildThisFileDirectory)Structures\" />
     <Folder Include="$(MSBuildThisFileDirectory)ViewModels\" />
   </ItemGroup>

@@ -173,6 +173,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Network\DownloadProvider.iOS.cs" />
+    <Compile Include="Network\Reachability.iOS.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
     <Compile Include="Controllers\DownloadController.cs" />
@@ -195,8 +197,7 @@
     <Compile Include="Controllers\HomeLocationController.designer.cs">
       <DependentUpon>HomeLocationController.cs</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\NetworkReachability.cs" />
-    <Compile Include="Helpers\DownloadDelegate.cs" />
+    <Compile Include="Network\DownloadDelegate.cs" />
     <Compile Include="Models\AutosuggestionsTableSource.cs" />
     <Compile Include="Models\FloorsTableSource.cs" />
     <Compile Include="Models\TableRowSelectedEventArgs.cs" />

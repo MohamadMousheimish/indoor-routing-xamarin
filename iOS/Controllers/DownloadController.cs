@@ -21,6 +21,7 @@ namespace IndoorRouting.iOS
     using System.IO;
     using Foundation;
     using UIKit;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Download controller contains the UI and logic for the download screen.
@@ -28,23 +29,11 @@ namespace IndoorRouting.iOS
     internal partial class DownloadController : UIViewController
     {
         /// <summary>
-        /// Unique identifier for the download session.
-        /// </summary>
-        private const string SessionId = "com.esri.indoorroutesession";
-
-        /// <summary>
-        /// Session used for transfer.
-        /// </summary>
-        private NSUrlSession session;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="T:IndoorRouting.iOS.DownloadController"/> class.
         /// </summary>
         /// <param name="handle">Controller Handle.</param>
         private DownloadController(IntPtr handle) : base(handle)
         {
-            this.ViewModel = new DownloadViewModel();
-            this.ViewModel.PropertyChanged += this.ViewModelPropertyChanged;
         }
 
         /// <summary>
@@ -58,14 +47,19 @@ namespace IndoorRouting.iOS
         public override async void ViewDidLoad()
         {
             base.ViewDidLoad();
-            this.InitializeNSUrlSession();
 
             // When the application has finished loading, bring in the settings
             string settingsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             AppSettings.CurrentSettings = await AppSettings.CreateAsync(Path.Combine(settingsPath, "AppSettings.xml")).ConfigureAwait(false);
 
-            // Call GetData to download or load the mmpk
-            await this.ViewModel.GetDataAsync().ConfigureAwait(false);
+            this.ViewModel = new DownloadViewModel();
+            this.ViewModel.PropertyChanged += this.ViewModelPropertyChanged;
+
+            var isMapCurrent = await ViewModel.IsLocalDataCurrentAsync();
+            if (isMapCurrent == true)
+                LoadMapView();
+            else
+                await DownloadAndDisplayMapAsync();
         }
 
         /// <summary>
@@ -80,19 +74,22 @@ namespace IndoorRouting.iOS
         /// <summary>
         /// Gets called by the delegate and tells the controller to load the map controller
         /// </summary>
-        internal void LoadMapView()
+        private void LoadMapView()
         {
-            var navController = Storyboard.InstantiateViewController("NavController");
+            InvokeOnMainThread(() =>
+            {
+                var navController = Storyboard.InstantiateViewController("NavController");
 
-            // KeyWindow only works if the application loaded fully. If key window is null, use the first available windowo
-            try
-            {
-                UIApplication.SharedApplication.KeyWindow.RootViewController = navController;
-            }
-            catch (NullReferenceException)
-            {
-                UIApplication.SharedApplication.Windows[0].RootViewController = navController;
-            }
+                // KeyWindow only works if the application loaded fully. If key window is null, use the first available windowo
+                try
+                {
+                    UIApplication.SharedApplication.KeyWindow.RootViewController = navController;
+                }
+                catch (NullReferenceException)
+                {
+                    UIApplication.SharedApplication.Windows[0].RootViewController = navController;
+                }
+            });
         }
 
         /// <summary>
@@ -101,11 +98,12 @@ namespace IndoorRouting.iOS
         /// <param name="sender">Sender element.</param>
         partial void RetryButton_TouchUpInside(UIButton sender)
         {
-            // Call GetData to download or load the mmpk
-            this.ViewModel.GetDataAsync().ConfigureAwait(false);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            DownloadAndDisplayMapAsync();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
-         /// <summary>
+        /// <summary>
         /// Fires when properties change in the DownloadViewModel
         /// </summary>
         /// <param name="sender">Sender element.</param>
@@ -114,94 +112,41 @@ namespace IndoorRouting.iOS
         {
             switch (e.PropertyName)
             {
-                case "DownloadURL":
-                    this.EnqueueDownload(this.ViewModel.DownloadURL);
-                    break;
-
-                case "IsDownloading":
-                    if (this.ViewModel.IsDownloading == true)
-                    {
-                        this.InvokeOnMainThread(() =>
-                        {
-                            this.ViewModel.Status = "Downloading Map...";
-                            progressView.Hidden = false;
-                            RetryButton.Hidden = true;
-                        });
-                    }
-                    else
-                    {
-                        this.InvokeOnMainThread(() =>
-                        {
-                            progressView.Hidden = true;
-                            RetryButton.Hidden = false;
-                        });
-                    }
-
-                    this.InvokeOnMainThread(() =>
-                    {
-                        statusLabel.Text = this.ViewModel.Status;
-                    });
-                    break;
-
-                case "IsReady":
-                    {
-                        this.InvokeOnMainThread(() => this.LoadMapView());
-                    }
-
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Initializes the NSUrl session.
-        /// </summary>
-        private void InitializeNSUrlSession()
-        {
-            // Initialize session config. Use a background session to enabled out of process uploads/downloads.
-            using (var sessionConfig = UIDevice.CurrentDevice.CheckSystemVersion(8, 0)
-                ? NSUrlSessionConfiguration.CreateBackgroundSessionConfiguration(SessionId)
-                : NSUrlSessionConfiguration.BackgroundSessionConfiguration(SessionId))
-            {
-                // Allow downloads over cellular network
-                sessionConfig.AllowsCellularAccess = true;
-
-                // Give the OS a hint about what we are downloading. This helps iOS to prioritize. For example "Background" is used to download data that was not requested by the user and
-                // should be ready if the app gets activated.
-                sessionConfig.NetworkServiceType = NSUrlRequestNetworkServiceType.Default;
-
-                // Configure how many downloads to allow at the same time. Set to 1 since we only meed to download one file
-                sessionConfig.HttpMaximumConnectionsPerHost = 1;
-
-                // Create a session delegate and the session itself
-                // Initialize the session itself with the configuration and a session delegate.
-                var sessionDelegate = new DownloadDelegate(this);
-                this.session = NSUrlSession.FromConfiguration(sessionConfig, sessionDelegate, null);
-            }
-        }
-
-        /// <summary>
-        /// Adds the download to the session.
-        /// </summary>
-        /// <param name="downloadUrl">Download URL for the mmpk.</param>
-        private void EnqueueDownload(string downloadUrl)
-        {
-            // Create a new download task.
-            var downloadTask = this.session.CreateDownloadTask(NSUrl.FromString(downloadUrl));
-
-            // Alert user if download fails
-            if (downloadTask == null)
-            {
-                this.BeginInvokeOnMainThread(() =>
+                case nameof(DownloadViewModel.DownloadProgress):
                 {
-                    var okAlertController = UIAlertController.Create("Download Error", "Failed to create download task, please retry", UIAlertControllerStyle.Alert);
-                    okAlertController.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, null));
-                    UIApplication.SharedApplication.KeyWindow.RootViewController.PresentViewController(okAlertController, true, null);
-                });
-                return;
-            }
+                    UpdateProgress((float)ViewModel.DownloadProgress);
+                }
 
-            // Resume / start the download.
-            downloadTask.Resume();
+                break;
+            }
+        }
+
+        private async Task<bool> DownloadAndDisplayMapAsync()
+        {
+            var downloadSucceeded = false;
+            InvokeOnMainThread(() =>
+            {
+                progressView.Hidden = false;
+                RetryButton.Hidden = true;
+                statusLabel.Text = "Downloading Map...";
+            });
+            try
+            {
+                // Call GetData to download or load the mmpk
+                await this.ViewModel.DownloadDataAsync().ConfigureAwait(false);
+                LoadMapView();
+                downloadSucceeded = true;
+            }
+            catch (Exception ex)
+            {
+                InvokeOnMainThread(() =>
+                {
+                    statusLabel.Text = "An error occurred downloading the map.  Please check your internet connection and try again.";
+                    progressView.Hidden = true;
+                    RetryButton.Hidden = false;
+                });
+            }
+            return downloadSucceeded;
         }
     }
 }

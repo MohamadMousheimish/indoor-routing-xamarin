@@ -56,7 +56,7 @@ namespace IndoorRouting
         /// Test if the network is available.
         /// </summary>
         /// <returns><c>true</c>, if network available was ised, <c>false</c> otherwise.</returns>
-        internal static bool IsNetworkAvailableInternal()
+        private static bool IsNetworkAvailableImpl()
         {
             if (defaultRouteReachability == null)
             {
