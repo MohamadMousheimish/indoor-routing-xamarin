@@ -179,10 +179,6 @@ namespace IndoorRouting.iOS
             if (error == null)
             {
                 downloadTcs?.TrySetResult(true);
-                //AppSettings.CurrentSettings.MmpkDownloadDate = DateTime.Now;
-
-                //// Save user settings
-                //Task.Run(() => AppSettings.SaveSettings(Path.Combine(DownloadViewModel.GetDataFolder(), "AppSettings.xml")));
             }
             else
             {
