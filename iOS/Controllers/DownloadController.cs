@@ -68,7 +68,10 @@ namespace IndoorRouting.iOS
         /// <param name="percentage">Percentage progress.</param>
         internal void UpdateProgress(float percentage)
         {
-            this.progressView.SetProgress(percentage, true);
+            InvokeOnMainThread(() =>
+            {
+                this.progressView.SetProgress(percentage, true);
+            });
         }
 
         /// <summary>
