@@ -77,6 +77,9 @@
       <SubType>Designer</SubType>
     </AndroidResource>
     <AndroidResource Include="Resources\layout\Map.axml" />
+    <AndroidResource Include="..\..\..\iOS\Assets.xcassets\Settings.imageset\iOS8_TabBar_Settings30.png">
+      <Link>Resources\drawable\iOS8_TabBar_Settings30.png</Link>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />
