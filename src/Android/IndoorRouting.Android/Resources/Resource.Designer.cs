@@ -77,6 +77,9 @@ namespace IndoorRouting
 		public partial class Color
 		{
 			
+			// aapt resource value: 0x7f050006
+			public const int accent = 2131034118;
+			
 			// aapt resource value: 0x7f050000
 			public const int cardview_dark_background = 2131034112;
 			
@@ -88,6 +91,18 @@ namespace IndoorRouting
 			
 			// aapt resource value: 0x7f050003
 			public const int cardview_shadow_start_color = 2131034115;
+			
+			// aapt resource value: 0x7f050005
+			public const int primary = 2131034117;
+			
+			// aapt resource value: 0x7f050004
+			public const int primaryDark = 2131034116;
+			
+			// aapt resource value: 0x7f050007
+			public const int textPrimary = 2131034119;
+			
+			// aapt resource value: 0x7f050008
+			public const int textSecondary = 2131034120;
 			
 			static Color()
 			{
@@ -133,6 +148,9 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f020002
 			public const int iOS8_TabBar_Settings30 = 2130837506;
 			
+			// aapt resource value: 0x7f020003
+			public const int iOS8_Toolbar_RouteTo52 = 2130837507;
+			
 			static Drawable()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
@@ -158,32 +176,41 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f080001
 			public const int DownloadProgressText = 2131230721;
 			
-			// aapt resource value: 0x7f08000b
-			public const int EnableLocationLayout = 2131230731;
-			
-			// aapt resource value: 0x7f08000d
-			public const int EnableLocationSwitch = 2131230733;
-			
-			// aapt resource value: 0x7f08000c
-			public const int EnableLocationTextView = 2131230732;
-			
 			// aapt resource value: 0x7f08000e
-			public const int EnableRoutingLayout = 2131230734;
+			public const int EnableLocationLayout = 2131230734;
 			
 			// aapt resource value: 0x7f080010
-			public const int EnableRoutingSwitch = 2131230736;
+			public const int EnableLocationSwitch = 2131230736;
 			
 			// aapt resource value: 0x7f08000f
-			public const int EnableRoutingTextView = 2131230735;
+			public const int EnableLocationTextView = 2131230735;
+			
+			// aapt resource value: 0x7f080011
+			public const int EnableRoutingLayout = 2131230737;
+			
+			// aapt resource value: 0x7f080013
+			public const int EnableRoutingSwitch = 2131230739;
+			
+			// aapt resource value: 0x7f080012
+			public const int EnableRoutingTextView = 2131230738;
 			
 			// aapt resource value: 0x7f080007
 			public const int MainMapView = 2131230727;
 			
-			// aapt resource value: 0x7f080009
-			public const int MainTextView = 2131230729;
+			// aapt resource value: 0x7f08000b
+			public const int MainTextView = 2131230731;
 			
 			// aapt resource value: 0x7f080003
 			public const int MyMapView = 2131230723;
+			
+			// aapt resource value: 0x7f080009
+			public const int ResultInfoLayout = 2131230729;
+			
+			// aapt resource value: 0x7f08000a
+			public const int ResultTextLayout = 2131230730;
+			
+			// aapt resource value: 0x7f08000d
+			public const int RouteButton = 2131230733;
 			
 			// aapt resource value: 0x7f080004
 			public const int SearchBarLayout = 2131230724;
@@ -191,8 +218,8 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f080006
 			public const int SearchTextView = 2131230726;
 			
-			// aapt resource value: 0x7f08000a
-			public const int SecondaryTextView = 2131230730;
+			// aapt resource value: 0x7f08000c
+			public const int SecondaryTextView = 2131230732;
 			
 			// aapt resource value: 0x7f080005
 			public const int imageButton1 = 2131230725;
@@ -262,6 +289,9 @@ namespace IndoorRouting
 			
 			// aapt resource value: 0x7f040003
 			public const int CardView_Light = 2130968579;
+			
+			// aapt resource value: 0x7f040004
+			public const int IndoorRouting_Theme = 2130968580;
 			
 			static Style()
 			{

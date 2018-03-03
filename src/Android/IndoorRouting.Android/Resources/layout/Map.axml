@@ -17,7 +17,7 @@
             android:layout_height="match_parent"
             android:id="@+id/imageButton1"
             android:src="@drawable/ios8_tabbar_settings30"
-            android:tint="#ff9e9e9e"
+            android:tint="#ffffffff"
             android:background="@null"
             android:paddingLeft="8dp"
             android:paddingRight="3dp"
@@ -29,7 +29,9 @@
             android:hint="Search rooms or people"
             android:singleLine="true"
             android:id="@+id/SearchTextView"
-            android:textSize="20dp" />
+            android:textSize="20dp"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="3dp" />
     </LinearLayout>
     <Esri.ArcGISRuntime.UI.Controls.MapView
         android:id="@+id/MainMapView"
@@ -51,22 +53,41 @@
         app:cardElevation="@dimen/cardview_default_elevation"
         app:contentPadding="16dp">
         <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/MainTextView"
-                android:textSize="16dp"
-                android:layout_width="match_parent"
+            android:id="@+id/ResultInfoLayout">
+            <LinearLayout
+                android:orientation="vertical"
+                android:id="@+id/ResultTextLayout"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="M3se 055" />
-            <TextView
-                android:id="@+id/SecondaryTextView"
-                android:textSize="13dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                tools:text="Alicia Albertson" />
+                android:layout_weight="1"
+                android:layout_gravity="fill">
+                <TextView
+                    android:id="@+id/MainTextView"
+                    android:textSize="16dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="M3se 055" />
+                <TextView
+                    android:id="@+id/SecondaryTextView"
+                    android:textSize="13dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    tools:text="Alicia Albertson" />
+            </LinearLayout>
+            <ImageButton
+                android:src="@drawable/ios8_toolbar_routeto52"
+                android:id="@+id/RouteButton"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="@null"
+                android:tint="#ffffffff"
+                android:scaleType="fitXY"
+                android:layout_gravity="center_vertical"
+                android:onClick="RouteButton_Click" />
         </LinearLayout>
     </android.support.v7.widget.CardView>
 </RelativeLayout>

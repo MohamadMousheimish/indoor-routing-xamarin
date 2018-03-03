@@ -19,6 +19,7 @@ using Esri.ArcGISRuntime.Mapping;
 using Esri.ArcGISRuntime.Symbology;
 using Esri.ArcGISRuntime.UI;
 using Esri.ArcGISRuntime.UI.Controls;
+using Java.Interop;
 
 namespace IndoorRouting
 {
@@ -33,6 +34,7 @@ namespace IndoorRouting
         TextView _mainTextView;
         TextView _secondaryTextView;
         CardView _contactCardView;
+        ImageButton _routeButton;
 
         protected async override void OnCreate(Bundle savedInstanceState)
         {
@@ -54,6 +56,7 @@ namespace IndoorRouting
             _mainTextView = FindViewById<TextView>(Resource.Id.MainTextView);
             _secondaryTextView = FindViewById<TextView>(Resource.Id.SecondaryTextView);
             _contactCardView = FindViewById<CardView>(Resource.Id.ContactCardView);
+            _routeButton = FindViewById<ImageButton>(Resource.Id.RouteButton);
 
             _locationViewModel = LocationViewModel.Instance;
 
@@ -214,6 +217,7 @@ namespace IndoorRouting
         {
             _mainTextView.Text = mainLabel;
             _secondaryTextView.Text = secondaryLabel;
+            _routeButton.Visibility = isRoute ? ViewStates.Invisible : ViewStates.Visible;
 
             _contactCardView.Animate().Alpha(1).SetDuration(200);
 
@@ -252,6 +256,12 @@ namespace IndoorRouting
 
                     break;
             }
+        }
+
+        [Export("RouteButton_Click")]
+        public void RouteButton_Click(View view)
+        {
+            
         }
     }
 }
