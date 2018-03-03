@@ -117,8 +117,8 @@ namespace IndoorRouting
             {
                 if (this.selectedFloorLevel != value && value != null)
                 {
-                    this.SetFloorVisibility(true);
                     this.selectedFloorLevel = value;
+                    this.SetFloorVisibility(true);
                     this.OnPropertyChanged(nameof(this.SelectedFloorLevel));
                 }
             }
