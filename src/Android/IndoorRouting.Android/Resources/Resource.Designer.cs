@@ -130,6 +130,9 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f020001
 			public const int Icon = 2130837505;
 			
+			// aapt resource value: 0x7f020002
+			public const int iOS8_TabBar_Settings30 = 2130837506;
+			
 			static Drawable()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
@@ -146,8 +149,8 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f080000
 			public const int CheckMapUpdateProgressBar = 2131230720;
 			
-			// aapt resource value: 0x7f080007
-			public const int ContactCardView = 2131230727;
+			// aapt resource value: 0x7f080008
+			public const int ContactCardView = 2131230728;
 			
 			// aapt resource value: 0x7f080002
 			public const int DownloadProgressBar = 2131230722;
@@ -155,11 +158,29 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f080001
 			public const int DownloadProgressText = 2131230721;
 			
-			// aapt resource value: 0x7f080006
-			public const int MainMapView = 2131230726;
+			// aapt resource value: 0x7f08000b
+			public const int EnableLocationLayout = 2131230731;
 			
-			// aapt resource value: 0x7f080008
-			public const int MainTextView = 2131230728;
+			// aapt resource value: 0x7f08000d
+			public const int EnableLocationSwitch = 2131230733;
+			
+			// aapt resource value: 0x7f08000c
+			public const int EnableLocationTextView = 2131230732;
+			
+			// aapt resource value: 0x7f08000e
+			public const int EnableRoutingLayout = 2131230734;
+			
+			// aapt resource value: 0x7f080010
+			public const int EnableRoutingSwitch = 2131230736;
+			
+			// aapt resource value: 0x7f08000f
+			public const int EnableRoutingTextView = 2131230735;
+			
+			// aapt resource value: 0x7f080007
+			public const int MainMapView = 2131230727;
+			
+			// aapt resource value: 0x7f080009
+			public const int MainTextView = 2131230729;
 			
 			// aapt resource value: 0x7f080003
 			public const int MyMapView = 2131230723;
@@ -167,11 +188,14 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f080004
 			public const int SearchBarLayout = 2131230724;
 			
-			// aapt resource value: 0x7f080005
-			public const int SearchTextView = 2131230725;
+			// aapt resource value: 0x7f080006
+			public const int SearchTextView = 2131230726;
 			
-			// aapt resource value: 0x7f080009
-			public const int SecondaryTextView = 2131230729;
+			// aapt resource value: 0x7f08000a
+			public const int SecondaryTextView = 2131230730;
+			
+			// aapt resource value: 0x7f080005
+			public const int imageButton1 = 2131230725;
 			
 			static Id()
 			{
@@ -194,6 +218,9 @@ namespace IndoorRouting
 			
 			// aapt resource value: 0x7f030002
 			public const int Map = 2130903042;
+			
+			// aapt resource value: 0x7f030003
+			public const int Settings = 2130903043;
 			
 			static Layout()
 			{

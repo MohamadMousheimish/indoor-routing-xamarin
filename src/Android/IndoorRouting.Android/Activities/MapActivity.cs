@@ -90,6 +90,22 @@ namespace IndoorRouting
 
         }
 
+        protected override void OnStart()
+        {
+            base.OnStart();
+
+            if (AppSettings.CurrentSettings.IsLocationServicesEnabled == true)
+            {
+                _mapView.LocationDisplay.IsEnabled = true;
+
+                // TODO: Set floor when available in the API (Update 2?)
+            }
+            else
+            {
+                _mapView.LocationDisplay.IsEnabled = false;
+            }
+        }
+
         private async void SearchTextView_TextChanged(object sender, Android.Text.TextChangedEventArgs e)
         {
             var suggestions = await _locationViewModel.GetLocationSuggestionsAsync(_searchTextView.Text);
