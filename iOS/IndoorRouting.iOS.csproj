@@ -151,7 +151,6 @@
     <Folder Include="Assets.xcassets\CurrentLocation.imageset\" />
     <Folder Include="Assets.xcassets\Navigation.imageset\" />
     <Folder Include="Controllers\" />
-    <Folder Include="Helpers\" />
     <Folder Include="Models\" />
     <Folder Include="Assets.xcassets\Menu.imageset\" />
     <Folder Include="Assets.xcassets\HomePin.imageset\" />
