@@ -124,6 +124,10 @@ namespace IndoorRouting
                     var downloadUri = new Uri($"{item.Url.AbsoluteUri}/data");
                     await _downloadProvider.DownloadAsync(downloadUri, _targetFileName,
                         new Progress<double>((progress) => DownloadProgress = progress));
+                    AppSettings.CurrentSettings.MmpkDownloadDate = DateTime.Now;
+
+                    // Save user settings
+                    await Task.Run(() => AppSettings.SaveSettings(Path.Combine(GetDataFolder(), "AppSettings.xml")));
                 }
                 catch (Exception ex)
                 {
