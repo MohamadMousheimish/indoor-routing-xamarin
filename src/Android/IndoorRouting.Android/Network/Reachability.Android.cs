@@ -32,6 +32,7 @@ namespace IndoorRouting
     {
         private static bool IsNetworkAvailableImpl()
         {
+            // TODO
             return true;
         }
     }

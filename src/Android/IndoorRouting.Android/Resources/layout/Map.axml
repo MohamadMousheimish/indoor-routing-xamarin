@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:id="@+id/SearchBarLayout">
+        <AutoCompleteTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Search rooms or people"
+            android:singleLine="true"
+            android:id="@+id/SearchTextView" />
+    </LinearLayout>
+    <Esri.ArcGISRuntime.UI.Controls.MapView
+        android:id="@+id/MainMapView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/SearchBarLayout"
+        android:layout_alignParentLeft="true" />
+    <android.support.v7.widget.CardView
+        android:id="@+id/ContactCardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:alpha="0"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        app:cardElevation="@dimen/cardview_default_elevation"
+        app:contentPadding="16dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/MainTextView"
+                android:textSize="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="M3se 055" />
+            <TextView
+                android:id="@+id/SecondaryTextView"
+                android:textSize="13dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                tools:text="Alicia Albertson" />
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+</RelativeLayout>
