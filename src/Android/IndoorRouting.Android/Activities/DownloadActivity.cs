@@ -38,17 +38,22 @@ namespace IndoorRouting
             _statusLabel = FindViewById<TextView>(Resource.Id.DownloadProgressText);
 
             // Initialize app settings
-            string settingsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+            string settingsPath =
+#if __ANDROID__
+                Android.App.Application.Context?.GetExternalFilesDir(Android.OS.Environment.DirectoryDownloads).Path;
+#else
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+#endif
             AppSettings.CurrentSettings = await AppSettings.CreateAsync(Path.Combine(settingsPath, "AppSettings.xml")).ConfigureAwait(false);
 
             _downloadViewModel = new DownloadViewModel();
             _downloadViewModel.PropertyChanged += ViewModelPropertyChanged;
 
-            var isMapCurrent = await _downloadViewModel.IsLocalDataCurrentAsync();
-            if (isMapCurrent == true)
+            //var isMapCurrent = await _downloadViewModel.IsLocalDataCurrentAsync();
+            //if (isMapCurrent == true)
                 LoadMapView();
-            else
-                await DownloadAndDisplayMapAsync();
+            //else
+                //await DownloadAndDisplayMapAsync();
 
 
             // Create your application here
