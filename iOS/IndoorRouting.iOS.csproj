@@ -190,7 +190,7 @@
       <DependentUpon>RouteController.cs</DependentUpon>
     </Compile>
     <Compile Include="Controllers\MapViewController.cs" />
-    <Compile Include="Controllers\MapViewController_.designer.cs">
+    <Compile Include="Controllers\MapViewController.designer.cs">
       <DependentUpon>MapViewController.cs</DependentUpon>
     </Compile>
     <Compile Include="Controllers\HomeLocationController.cs" />
