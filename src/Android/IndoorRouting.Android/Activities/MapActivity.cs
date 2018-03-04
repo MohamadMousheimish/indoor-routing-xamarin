@@ -20,6 +20,7 @@ using Esri.ArcGISRuntime.Symbology;
 using Esri.ArcGISRuntime.UI;
 using Esri.ArcGISRuntime.UI.Controls;
 using Java.Interop;
+using Esri.ArcGISRuntime.Data;
 
 namespace IndoorRouting
 {
@@ -35,6 +36,12 @@ namespace IndoorRouting
         TextView _secondaryTextView;
         CardView _contactCardView;
         ImageButton _routeButton;
+        GraphicsOverlay _pinsGraphicsOverlay;
+        GraphicsOverlay _routeGraphicsOverlay;
+        PictureMarkerSymbol _roomMarker;
+        PictureMarkerSymbol _startMarker;
+        PictureMarkerSymbol _endMarker;
+        SimpleLineSymbol _routeSymbol;
 
         protected async override void OnCreate(Bundle savedInstanceState)
         {
@@ -43,7 +50,35 @@ namespace IndoorRouting
             base.OnCreate(savedInstanceState);
 
             SetContentView(Resource.Layout.Map);
+        }
 
+        protected async override void OnStart()
+        {
+            base.OnStart();
+
+            await InitializeMembersAsync();
+
+            if (AppSettings.CurrentSettings.IsLocationServicesEnabled == true)
+            {
+                _mapView.LocationDisplay.IsEnabled = true;
+
+                // TODO: Set floor when available in the API (Update 2?)
+            }
+            else
+            {
+                _mapView.LocationDisplay.IsEnabled = false;
+            }
+
+            // Check whether route display data was passed
+            var routeDisplayInfo = IntentBroker.GetExtra(this, IntentNames.RouteInfo) as RouteDisplayInfo;
+            if (routeDisplayInfo?.Route != null && routeDisplayInfo?.ToPoint != null)
+            {
+                await ShowRouteAsync(routeDisplayInfo);
+            }
+        }
+
+        private async Task InitializeMembersAsync()
+        {
             _mapView = FindViewById<MapView>(Resource.Id.MainMapView);
             _searchTextView = FindViewById<AutoCompleteTextView>(Resource.Id.SearchTextView);
             _searchTextView.TextChanged += SearchTextView_TextChanged;
@@ -65,17 +100,31 @@ namespace IndoorRouting
             _mapView.BackgroundGrid.Color = System.Drawing.Color.WhiteSmoke;
 
             // Add a graphics overlay to hold the pins and route graphics
-            var pinsGraphicOverlay = new GraphicsOverlay();
-            pinsGraphicOverlay.Id = "PinsGraphicsOverlay";
-            _mapView.GraphicsOverlays.Add(pinsGraphicOverlay);
+            _pinsGraphicsOverlay = new GraphicsOverlay
+            {
+                Id = "PinsGraphicsOverlay"
+            };
+            _mapView.GraphicsOverlays.Add(_pinsGraphicsOverlay);
 
-            var labelsGraphicOverlay = new GraphicsOverlay();
-            labelsGraphicOverlay.Id = "LabelsGraphicsOverlay";
-            _mapView.GraphicsOverlays.Add(labelsGraphicOverlay);
+            _routeGraphicsOverlay = new GraphicsOverlay
+            {
+                Id = "RouteGraphicsOverlay"
+            };
+            _mapView.GraphicsOverlays.Add(_routeGraphicsOverlay);
 
-            var routeGraphicsOverlay = new GraphicsOverlay();
-            routeGraphicsOverlay.Id = "RouteGraphicsOverlay";
-            _mapView.GraphicsOverlays.Add(routeGraphicsOverlay);
+            // Initialize point symbols
+            _roomMarker = await CreateSymbolFromAssetAsync("iOS8_MapPin_End36.png", offsetX: null, offsetY: 0.65);
+            _startMarker = await CreateSymbolFromAssetAsync("GreenDot36.png");
+            _endMarker = await CreateSymbolFromAssetAsync("RedDot36.png");
+
+            // Initialize route (line) symbol
+            _routeSymbol = new SimpleLineSymbol
+            {
+                Width = 5,
+                Style = SimpleLineSymbolStyle.Solid,
+                Color = System.Drawing.Color.FromArgb(127, 18, 121, 193)
+            };
+
 
             //// Handle the user moving the map 
             //this.MapView.NavigationCompleted += this.MapView_NavigationCompleted;
@@ -90,22 +139,88 @@ namespace IndoorRouting
             //this.MapView.GeoViewHolding += this.MapView_GeoViewHolding;
 
             //this.MapView.LocationDisplay.LocationChanged += this.MapView_LocationChanged;
-
         }
 
-        protected override void OnStart()
+        private async Task<PictureMarkerSymbol> CreateSymbolFromAssetAsync(string assetName, double? offsetX = null, double? offsetY = null)
         {
-            base.OnStart();
-
-            if (AppSettings.CurrentSettings.IsLocationServicesEnabled == true)
+            using (var symbolStream = Assets.Open(assetName))
             {
-                _mapView.LocationDisplay.IsEnabled = true;
+                using (var symbolMemoryStream = new MemoryStream())
+                {
+                    await symbolStream.CopyToAsync(symbolMemoryStream);
+                    var symbolBytes = symbolMemoryStream.ToArray();
+                    var symbol = new PictureMarkerSymbol(new RuntimeImage(symbolBytes));
 
-                // TODO: Set floor when available in the API (Update 2?)
+                    // Set pin size to match image size
+                    var options = new BitmapFactory.Options() { InJustDecodeBounds = true };
+                    await BitmapFactory.DecodeByteArrayAsync(symbolBytes, 0, symbolBytes.Length, options);
+                    symbol.Width = options.OutWidth;
+                    symbol.Height = options.OutHeight;
+
+                    // Set offset, if specified
+                    if (offsetX.HasValue)
+                    {
+                        symbol.OffsetX = options.OutWidth * (double)offsetX;
+                    }
+                    if (offsetY.HasValue)
+                    {
+                        symbol.OffsetY = options.OutHeight * (double)offsetY;
+                    }
+
+                    return symbol;
+                }
+            }
+        }
+
+        private async Task ShowRouteAsync(RouteDisplayInfo routeDisplayInfo)
+        {
+            // get the route from the results
+            var newRoute = routeDisplayInfo.Route.Routes.FirstOrDefault();
+
+            if (newRoute != null)
+            {
+                StringBuilder walkTimeStringBuilder = new StringBuilder();
+
+                // Add walk time and distance label
+                if (newRoute.TotalTime.Hours > 0)
+                {
+                    walkTimeStringBuilder.Append(string.Format("{0} h {1} m", newRoute.TotalTime.Hours, newRoute.TotalTime.Minutes));
+                }
+                else
+                {
+                    walkTimeStringBuilder.Append(string.Format("{0} min", newRoute.TotalTime.Minutes + 1));
+                }
+
+                //var tableSource = new List<Feature>() { this.FromLocationFeature, this.ToLocationFeature };
+                //this.ShowRouteCard(tableSource, walkTimeStringBuilder.ToString());
+
+                // Create point graphics
+                var startGraphic = new Graphic(newRoute.RouteGeometry.Parts.First().Points.First(), _startMarker);
+                var endGraphic = new Graphic(newRoute.RouteGeometry.Parts.Last().Points.Last(), _endMarker);
+
+                var routeGraphic = new Graphic(newRoute.RouteGeometry, _routeSymbol);
+
+                // Add graphics to overlay
+                _routeGraphicsOverlay.Graphics.Clear();
+                _routeGraphicsOverlay.Graphics.Add(routeGraphic);
+                _routeGraphicsOverlay.Graphics.Add(startGraphic);
+                _routeGraphicsOverlay.Graphics.Add(endGraphic);
+
+                // Hide the pins graphics overlay
+                _pinsGraphicsOverlay.IsVisible = false;
+
+                try
+                {
+                    await _mapView.SetViewpointGeometryAsync(newRoute.RouteGeometry, 30);
+                }
+                catch
+                {
+                    // If panning to the new route fails, just move on
+                }
             }
             else
             {
-                _mapView.LocationDisplay.IsEnabled = false;
+                //this.ShowBottomCard("Routing Error", "Please retry route", true);
             }
         }
 
@@ -161,28 +276,14 @@ namespace IndoorRouting
 
             if (geocodeResult != null)
             {
-                // create a picture marker symbol
-                var mapPinStream = Assets.Open("iOS8_MapPin_End36.png");
-                var mapPinMemoryStream = new MemoryStream();
-                await mapPinStream.CopyToAsync(mapPinMemoryStream);
-                var mapPinBytes = mapPinMemoryStream.ToArray();
-                var roomMarker = new PictureMarkerSymbol(new RuntimeImage(mapPinBytes));
-
-                // Get pin size and use it to set offset
-                var options = new BitmapFactory.Options() { InJustDecodeBounds = true };
-                await BitmapFactory.DecodeByteArrayAsync(mapPinBytes, 0, mapPinBytes.Length, options);
-                roomMarker.Width = options.OutWidth;
-                roomMarker.Height = options.OutHeight;
-                roomMarker.OffsetY = options.OutHeight * 0.65;
-
                 // Create graphic
-                var mapPinGraphic = new Graphic(geocodeResult.DisplayLocation, roomMarker);
+                var mapPinGraphic = new Graphic(geocodeResult.DisplayLocation, _roomMarker);
 
                 // Add pin to map
                 var graphicsOverlay = this._mapView.GraphicsOverlays["PinsGraphicsOverlay"];
-                graphicsOverlay.Graphics.Clear();
-                graphicsOverlay.Graphics.Add(mapPinGraphic);
-                graphicsOverlay.IsVisible = true;
+                _pinsGraphicsOverlay.Graphics.Clear();
+                _pinsGraphicsOverlay.Graphics.Add(mapPinGraphic);
+                _pinsGraphicsOverlay.IsVisible = true;
 
                 this._mapViewModel.Viewpoint = new Viewpoint(geocodeResult.DisplayLocation, 150);
 
@@ -258,10 +359,18 @@ namespace IndoorRouting
             }
         }
 
+        [Export("SettingsButton_Click")]
+        public void SettingsButton_Click(View view)
+        {
+            StartActivity(typeof(SettingsActivity));
+        }
+
         [Export("RouteButton_Click")]
         public void RouteButton_Click(View view)
         {
-            
+            var routeIntent = new Intent(this, typeof(RouteActivity));
+            routeIntent.PutExtra(IntentNames.EndLocation, _mainTextView.Text);
+            StartActivity(routeIntent);
         }
     }
 }

@@ -111,6 +111,12 @@
     <AndroidAsset Include="..\..\..\iOS\Assets.xcassets\MapPin.imageset\iOS8_MapPin_End36.png">
       <Link>Assets\iOS8_MapPin_End36.png</Link>
     </AndroidAsset>
+    <AndroidAsset Include="..\..\..\iOS\Assets.xcassets\StartCircle.imageset\GreenDot36.png">
+      <Link>Assets\GreenDot36.png</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\..\iOS\Assets.xcassets\EndCircle.imageset\RedDot36.png">
+      <Link>Assets\RedDot36.png</Link>
+    </AndroidAsset>
   </ItemGroup>
   <Import Project="..\..\..\IndoorRouting\IndoorRouting.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
