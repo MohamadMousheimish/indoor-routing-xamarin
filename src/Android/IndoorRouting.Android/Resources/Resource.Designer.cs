@@ -143,13 +143,22 @@ namespace IndoorRouting
 			public const int esri = 2130837504;
 			
 			// aapt resource value: 0x7f020001
-			public const int Icon = 2130837505;
+			public const int GreenDot36 = 2130837505;
 			
 			// aapt resource value: 0x7f020002
-			public const int iOS8_TabBar_Settings30 = 2130837506;
+			public const int Icon = 2130837506;
 			
 			// aapt resource value: 0x7f020003
-			public const int iOS8_Toolbar_RouteTo52 = 2130837507;
+			public const int iOS8_TabBar_Settings30 = 2130837507;
+			
+			// aapt resource value: 0x7f020004
+			public const int iOS8_Toolbar_RouteTo52 = 2130837508;
+			
+			// aapt resource value: 0x7f020005
+			public const int RedDot36 = 2130837509;
+			
+			// aapt resource value: 0x7f020006
+			public const int user_walk = 2130837510;
 			
 			static Drawable()
 			{
@@ -176,23 +185,44 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f080001
 			public const int DownloadProgressText = 2131230721;
 			
-			// aapt resource value: 0x7f08000e
-			public const int EnableLocationLayout = 2131230734;
+			// aapt resource value: 0x7f080022
+			public const int EnableLocationLayout = 2131230754;
 			
-			// aapt resource value: 0x7f080010
-			public const int EnableLocationSwitch = 2131230736;
+			// aapt resource value: 0x7f080024
+			public const int EnableLocationSwitch = 2131230756;
 			
-			// aapt resource value: 0x7f08000f
-			public const int EnableLocationTextView = 2131230735;
+			// aapt resource value: 0x7f080023
+			public const int EnableLocationTextView = 2131230755;
 			
-			// aapt resource value: 0x7f080011
-			public const int EnableRoutingLayout = 2131230737;
+			// aapt resource value: 0x7f080025
+			public const int EnableRoutingLayout = 2131230757;
 			
-			// aapt resource value: 0x7f080013
-			public const int EnableRoutingSwitch = 2131230739;
+			// aapt resource value: 0x7f080027
+			public const int EnableRoutingSwitch = 2131230759;
 			
-			// aapt resource value: 0x7f080012
-			public const int EnableRoutingTextView = 2131230738;
+			// aapt resource value: 0x7f080026
+			public const int EnableRoutingTextView = 2131230758;
+			
+			// aapt resource value: 0x7f08001a
+			public const int EndFloorTextView = 2131230746;
+			
+			// aapt resource value: 0x7f080021
+			public const int EndLocationAutoCompleteTextView = 2131230753;
+			
+			// aapt resource value: 0x7f080020
+			public const int EndLocationLayout = 2131230752;
+			
+			// aapt resource value: 0x7f080019
+			public const int EndLocationTextView = 2131230745;
+			
+			// aapt resource value: 0x7f080017
+			public const int EndPointIconView = 2131230743;
+			
+			// aapt resource value: 0x7f080016
+			public const int EndPointLayout = 2131230742;
+			
+			// aapt resource value: 0x7f080018
+			public const int EndPointTextLayout = 2131230744;
 			
 			// aapt resource value: 0x7f080007
 			public const int MainMapView = 2131230727;
@@ -212,6 +242,12 @@ namespace IndoorRouting
 			// aapt resource value: 0x7f08000d
 			public const int RouteButton = 2131230733;
 			
+			// aapt resource value: 0x7f08000e
+			public const int RouteCardView = 2131230734;
+			
+			// aapt resource value: 0x7f08000f
+			public const int RouteInfoLayout = 2131230735;
+			
 			// aapt resource value: 0x7f080004
 			public const int SearchBarLayout = 2131230724;
 			
@@ -220,6 +256,39 @@ namespace IndoorRouting
 			
 			// aapt resource value: 0x7f08000c
 			public const int SecondaryTextView = 2131230732;
+			
+			// aapt resource value: 0x7f080010
+			public const int StartAndEndInfoLayout = 2131230736;
+			
+			// aapt resource value: 0x7f080015
+			public const int StartFloorTextView = 2131230741;
+			
+			// aapt resource value: 0x7f08001f
+			public const int StartLocationAutoCompleteTextView = 2131230751;
+			
+			// aapt resource value: 0x7f08001e
+			public const int StartLocationLayout = 2131230750;
+			
+			// aapt resource value: 0x7f080014
+			public const int StartLocationTextView = 2131230740;
+			
+			// aapt resource value: 0x7f080012
+			public const int StartPointIconView = 2131230738;
+			
+			// aapt resource value: 0x7f080011
+			public const int StartPointLayout = 2131230737;
+			
+			// aapt resource value: 0x7f080013
+			public const int StartPointTextLayout = 2131230739;
+			
+			// aapt resource value: 0x7f08001c
+			public const int WalkIconView = 2131230748;
+			
+			// aapt resource value: 0x7f08001b
+			public const int WalkTimeLayout = 2131230747;
+			
+			// aapt resource value: 0x7f08001d
+			public const int WalkTimeTextView = 2131230749;
 			
 			// aapt resource value: 0x7f080005
 			public const int imageButton1 = 2131230725;
@@ -247,7 +316,10 @@ namespace IndoorRouting
 			public const int Map = 2130903042;
 			
 			// aapt resource value: 0x7f030003
-			public const int Settings = 2130903043;
+			public const int Route = 2130903043;
+			
+			// aapt resource value: 0x7f030004
+			public const int Settings = 2130903044;
 			
 			static Layout()
 			{

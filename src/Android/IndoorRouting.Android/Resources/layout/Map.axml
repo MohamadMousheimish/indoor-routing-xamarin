@@ -90,4 +90,130 @@
                 android:onClick="RouteButton_Click" />
         </LinearLayout>
     </android.support.v7.widget.CardView>
+    <android.support.v7.widget.CardView xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/RouteCardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:alpha="0"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true"
+        app:cardElevation="@dimen/cardview_default_elevation"
+        app:contentPaddingLeft="16dp"
+        app:contentPaddingRight="16dp"
+        app:contentPaddingTop="12dp"
+        app:contentPaddingBottom="12dp">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/RouteInfoLayout">
+            <LinearLayout
+                android:orientation="vertical"
+                android:minWidth="25px"
+                android:minHeight="25px"
+                android:id="@+id/StartAndEndInfoLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:minWidth="25px"
+                    android:minHeight="25px"
+                    android:id="@+id/StartPointLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:src="@drawable/greendot36"
+                        android:id="@+id/StartPointIconView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" />
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:id="@+id/StartPointTextLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="fill"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="5dp">
+                        <TextView
+                            android:id="@+id/StartLocationTextView"
+                            android:textSize="16dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="M3se 055" />
+                        <TextView
+                            android:id="@+id/StartFloorTextView"
+                            android:textSize="13dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            tools:text="3rd Floor" />
+                    </LinearLayout>
+                </LinearLayout>
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:minWidth="25px"
+                    android:minHeight="25px"
+                    android:id="@+id/EndPointLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+                    <ImageView
+                        android:src="@drawable/reddot36"
+                        android:id="@+id/EndPointIconView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" />
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:id="@+id/EndPointTextLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="fill"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="5dp">
+                        <TextView
+                            android:id="@+id/EndLocationTextView"
+                            android:textSize="16dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:text="M3se 055" />
+                        <TextView
+                            android:id="@+id/EndFloorTextView"
+                            android:textSize="13dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            tools:text="3rd Floor" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:orientation="vertical"
+                android:minWidth="25px"
+                android:minHeight="25px"
+                android:id="@+id/WalkTimeLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical">
+                <ImageView
+                    android:src="@drawable/user_walk"
+                    android:id="@+id/WalkIconView"
+                    android:background="@null"
+                    android:tint="#ffffffff"
+                    android:scaleType="fitXY"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+                <TextView
+                    android:id="@+id/WalkTimeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:textColor="#ffffffff"
+                    tools:text="3 min"
+                    android:textSize="18dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
 </RelativeLayout>

@@ -119,8 +119,8 @@ namespace IndoorRouting
 
                 routeInfo = new RouteDisplayInfo()
                 {
-                    FromPoint = routeFromCurrentLocation ? null : fromLocationPoint,
-                    ToPoint = toLocationPoint,
+                    FromFeature = routeFromCurrentLocation ? null : fromLocationFeature,
+                    ToFeature = toLocationFeature,
                     Route = route
                 };
             }

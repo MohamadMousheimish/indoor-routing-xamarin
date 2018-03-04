@@ -85,10 +85,18 @@
     <AndroidResource Include="..\..\..\iOS\Assets.xcassets\Settings.imageset\iOS8_TabBar_Settings30.png">
       <Link>Resources\drawable\iOS8_TabBar_Settings30.png</Link>
     </AndroidResource>
+    <AndroidResource Include="Resources\layout\Settings.axml" />
     <AndroidResource Include="..\..\..\iOS\Assets.xcassets\Navigation.imageset\iOS8_Toolbar_RouteTo52.png">
       <Link>Resources\drawable\iOS8_Toolbar_RouteTo52.png</Link>
     </AndroidResource>
     <AndroidResource Include="Resources\layout\Route.axml" />
+    <AndroidResource Include="Resources\drawable\user_walk.png" />
+    <AndroidResource Include="..\..\..\iOS\Assets.xcassets\StartCircle.imageset\GreenDot36.png">
+      <Link>Resources\drawable\GreenDot36.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="..\..\..\iOS\Assets.xcassets\EndCircle.imageset\RedDot36.png">
+      <Link>Resources\drawable\RedDot36.png</Link>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />

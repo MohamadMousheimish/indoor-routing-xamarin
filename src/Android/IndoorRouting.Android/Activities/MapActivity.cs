@@ -19,6 +19,7 @@ using Esri.ArcGISRuntime.Mapping;
 using Esri.ArcGISRuntime.Symbology;
 using Esri.ArcGISRuntime.UI;
 using Esri.ArcGISRuntime.UI.Controls;
+using Esri.ArcGISRuntime.Geometry;
 using Java.Interop;
 using Esri.ArcGISRuntime.Data;
 
@@ -42,6 +43,13 @@ namespace IndoorRouting
         PictureMarkerSymbol _startMarker;
         PictureMarkerSymbol _endMarker;
         SimpleLineSymbol _routeSymbol;
+        CardView _routeCardView;
+        TextView _startLocationTextView;
+        TextView _startFloorTextView;
+        TextView _endLocationTextView;
+        TextView _endFloorTextView;
+        TextView _walkTimeTextView;
+        string _savedExtent;
 
         protected async override void OnCreate(Bundle savedInstanceState)
         {
@@ -69,10 +77,11 @@ namespace IndoorRouting
                 _mapView.LocationDisplay.IsEnabled = false;
             }
 
-            // Check whether route display data was passed
+            // Check whether route display data was received
             var routeDisplayInfo = IntentBroker.GetExtra(this, IntentNames.RouteInfo) as RouteDisplayInfo;
-            if (routeDisplayInfo?.Route != null && routeDisplayInfo?.ToPoint != null)
+            if (routeDisplayInfo?.Route != null && routeDisplayInfo?.ToFeature != null)
             {
+                // Got route data, so show it
                 await ShowRouteAsync(routeDisplayInfo);
             }
         }
@@ -92,6 +101,14 @@ namespace IndoorRouting
             _secondaryTextView = FindViewById<TextView>(Resource.Id.SecondaryTextView);
             _contactCardView = FindViewById<CardView>(Resource.Id.ContactCardView);
             _routeButton = FindViewById<ImageButton>(Resource.Id.RouteButton);
+
+            // Route result card
+            _routeCardView = FindViewById<CardView>(Resource.Id.RouteCardView);
+            _startLocationTextView = FindViewById<TextView>(Resource.Id.StartLocationTextView);
+            _startFloorTextView = FindViewById<TextView>(Resource.Id.StartFloorTextView);
+            _endLocationTextView = FindViewById<TextView>(Resource.Id.EndLocationTextView);
+            _endFloorTextView = FindViewById<TextView>(Resource.Id.EndFloorTextView);
+            _walkTimeTextView = FindViewById<TextView>(Resource.Id.WalkTimeTextView);
 
             _locationViewModel = LocationViewModel.Instance;
 
@@ -192,7 +209,7 @@ namespace IndoorRouting
                 }
 
                 //var tableSource = new List<Feature>() { this.FromLocationFeature, this.ToLocationFeature };
-                //this.ShowRouteCard(tableSource, walkTimeStringBuilder.ToString());
+                ShowRouteCard(routeDisplayInfo.FromFeature, routeDisplayInfo.ToFeature, walkTimeStringBuilder.ToString());
 
                 // Create point graphics
                 var startGraphic = new Graphic(newRoute.RouteGeometry.Parts.First().Points.First(), _startMarker);
@@ -220,7 +237,7 @@ namespace IndoorRouting
             }
             else
             {
-                //this.ShowBottomCard("Routing Error", "Please retry route", true);
+                ShowContactCard("Routing Error", "Please retry route", true);
             }
         }
 
@@ -323,13 +340,69 @@ namespace IndoorRouting
             _contactCardView.Animate().Alpha(1).SetDuration(200);
 
             _mapView.IsAttributionTextVisible = false;
+
+            var cardXY = new int[2];
+            _contactCardView.GetLocationOnScreen(cardXY);
+            var size = new Point();
+            WindowManager.DefaultDisplay.GetSize(size);
+            var bottomPadding = size.Y - cardXY[1];
+            _mapView.SetViewInsets(0, 0, 0, bottomPadding);
         }
 
-        private void HideContactCard()
+        private void HideGeocodeResult()
         {
+            _pinsGraphicsOverlay.Graphics.Clear();
             _contactCardView.Animate().Alpha(0).SetDuration(200);
 
             _mapView.IsAttributionTextVisible = true;
+
+            _mapView.SetViewInsets(0, 0, 0, 0);
+        }
+
+        private void ShowRouteCard(Feature fromFeature, Feature toFeature, string walkTime)
+        {
+            HideGeocodeResult();
+
+            var locationField = AppSettings.CurrentSettings.LocatorFields[0];
+
+            // Retrieve and display the location name of the start and end points
+            _startLocationTextView.Text = (string)fromFeature.Attributes[locationField];
+            _endLocationTextView.Text = (string)toFeature.Attributes[locationField];
+
+            // Get the floor of the start and end points and format it for display
+            var floorField = AppSettings.CurrentSettings.RoomsLayerFloorColumnName;
+            var fromFloor = fromFeature.Attributes[floorField].ToString();
+            var fromFloorSuffix = GetOrdinalSuffix(fromFloor);
+            var toFloor = fromFeature.Attributes[floorField].ToString();
+            var toFloorSuffix = GetOrdinalSuffix(toFloor);
+
+            _startFloorTextView.Text = $"{fromFloor}{fromFloorSuffix} Floor";
+            _endFloorTextView.Text = $"{toFloor}{toFloorSuffix} Floor";
+
+            // Display the walk time
+            _walkTimeTextView.Text = walkTime;
+
+            _routeCardView.Animate().Alpha(1).SetDuration(200);
+
+            _mapView.IsAttributionTextVisible = false;
+
+            var cardXY = new int[2];
+            _routeCardView.GetLocationOnScreen(cardXY);
+            var size = new Point();
+            WindowManager.DefaultDisplay.GetSize(size);
+            var bottomPadding = size.Y - cardXY[1];
+            _mapView.SetViewInsets(0, 0, 0, bottomPadding);
+        }
+
+
+        private void HideRouteResults()
+        {
+            _routeGraphicsOverlay.Graphics.Clear();
+            _routeCardView.Animate().Alpha(0).SetDuration(200);
+
+            _mapView.IsAttributionTextVisible = true;
+
+            _mapView.SetViewInsets(0, 0, 0, 0);
         }
 
         /// <summary>
@@ -371,6 +444,40 @@ namespace IndoorRouting
             var routeIntent = new Intent(this, typeof(RouteActivity));
             routeIntent.PutExtra(IntentNames.EndLocation, _mainTextView.Text);
             StartActivity(routeIntent);
+        }
+
+
+        private string GetOrdinalSuffix(string number)
+        {
+            if (number.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var lastChar = number[number.Length - 1];
+            var lastDigit = (int)Char.GetNumericValue(lastChar);
+            if (lastDigit > 9) // Char was not a number
+            {
+                return string.Empty;
+            }
+            else if (lastDigit > 3 || lastDigit == 0)
+            {
+                return "th";
+            }
+            else if (lastDigit == 3)
+            {
+                return "rd";
+            }
+            else if (lastDigit == 2)
+            {
+                return "nd";
+            }
+            else if (lastDigit == 1)
+            {
+                return "st";
+            }
+
+            return string.Empty;
         }
     }
 }

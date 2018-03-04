@@ -1,5 +1,5 @@
 ﻿using System;
-using Esri.ArcGISRuntime.Geometry;
+using Esri.ArcGISRuntime.Data;
 using Esri.ArcGISRuntime.Tasks.NetworkAnalysis;
 
 namespace IndoorRouting
@@ -8,9 +8,9 @@ namespace IndoorRouting
     {
         public RouteDisplayInfo() { }
 
-        public MapPoint FromPoint { get; set; }
+        public Feature FromFeature { get; set; }
 
-        public MapPoint ToPoint { get; set; }
+        public Feature ToFeature { get; set; }
 
         public RouteResult Route { get; set; }
     }
