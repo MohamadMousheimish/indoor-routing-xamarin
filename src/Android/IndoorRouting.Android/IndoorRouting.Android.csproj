@@ -73,6 +73,8 @@
     <Compile Include="Activities\SettingsActivity.cs" />
     <Compile Include="Activities\RouteActivity.cs" />
     <Compile Include="RouteDisplayInfo.cs" />
+    <Compile Include="Helpers\IntentBroker.cs" />
+    <Compile Include="Helpers\IntentNames.cs" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Download.axml">
@@ -103,6 +105,7 @@
   <ItemGroup>
     <Folder Include="Assets\" />
     <Folder Include="Activities\" />
+    <Folder Include="Helpers\" />
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="..\..\..\iOS\Assets.xcassets\MapPin.imageset\iOS8_MapPin_End36.png">
