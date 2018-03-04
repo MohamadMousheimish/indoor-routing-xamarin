@@ -132,6 +132,7 @@ namespace IndoorRouting
             var mapIntent = new Intent(this, typeof(MapActivity));
             mapIntent.PutExtra(IntentNames.RouteInfo, routeInfo);
             StartActivity(mapIntent);
+            Finish();
         }
     }
 }

@@ -65,6 +65,7 @@ namespace IndoorRouting
         private void LoadMapView()
         {
             StartActivity(typeof(MapActivity));
+            Finish();
         }
 
 //        /// <summary>
