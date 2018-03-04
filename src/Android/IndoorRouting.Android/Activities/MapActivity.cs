@@ -302,8 +302,6 @@ namespace IndoorRouting
                 _pinsGraphicsOverlay.Graphics.Add(mapPinGraphic);
                 _pinsGraphicsOverlay.IsVisible = true;
 
-                this._mapViewModel.Viewpoint = new Viewpoint(geocodeResult.DisplayLocation, 150);
-
                 // Get the feature to populate the Contact Card
                 var roomFeature = await LocationViewModel.Instance.GetRoomFeatureAsync(searchText);
 
@@ -324,6 +322,8 @@ namespace IndoorRouting
 
                     ShowContactCard(roomNumberLabel.ToString(), employeeNameLabel.ToString(), false);
                 }
+
+                this._mapViewModel.Viewpoint = new Viewpoint(geocodeResult.DisplayLocation, 150);
             }
             else
             {
@@ -333,6 +333,8 @@ namespace IndoorRouting
 
         private void ShowContactCard(string mainLabel, string secondaryLabel, bool isRoute)
         {
+            HideRouteResults();
+
             _mainTextView.Text = mainLabel;
             _secondaryTextView.Text = secondaryLabel;
             _routeButton.Visibility = isRoute ? ViewStates.Invisible : ViewStates.Visible;
