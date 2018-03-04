@@ -71,6 +71,8 @@
     <Compile Include="Activities\MapActivity.cs" />
     <Compile Include="Activities\DownloadActivity.cs" />
     <Compile Include="Activities\SettingsActivity.cs" />
+    <Compile Include="Activities\RouteActivity.cs" />
+    <Compile Include="RouteDisplayInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Download.axml">
@@ -83,6 +85,7 @@
     <AndroidResource Include="..\..\..\iOS\Assets.xcassets\Navigation.imageset\iOS8_Toolbar_RouteTo52.png">
       <Link>Resources\drawable\iOS8_Toolbar_RouteTo52.png</Link>
     </AndroidResource>
+    <AndroidResource Include="Resources\layout\Route.axml" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />
