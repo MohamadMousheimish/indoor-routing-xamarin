@@ -16,10 +16,7 @@ namespace IndoorRouting.Managers
     public class SampleManager
     {
         // Private Constructor
-        private SampleManager()
-        {
-
-        }
+        private SampleManager() { }
 
         // Static initialization of the unique instance
         private static readonly SampleManager SingleInstance = new SampleManager();
@@ -60,7 +57,7 @@ namespace IndoorRouting.Managers
             FullTree = BuildFullTree(AllSamples);
 
             // Add a special category for featured samples
-            var featured = new SearchableTreeNode("Features", AllSamples.Where(sample => sample.Tags.Contains("Featured")));
+            var featured = new SearchableTreeNode("Featured", AllSamples.Where(sample => sample.Tags.Contains("Featured")));
             FullTree.Items.Insert(0, featured);
         }
 

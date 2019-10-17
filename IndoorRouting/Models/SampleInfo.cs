@@ -21,7 +21,7 @@ namespace IndoorRouting.Models
         /// <summary>
         /// Get the path to the sample on disk
         /// </summary>
-        public string Path { get { return System.IO.Path.Combine(_pathStub, "Samples", Category, FormalName); } }
+        public string Path { get { return System.IO.Path.Combine(_pathStub, "Activities", Category, FormalName); } }
 
         /// <summary>
         /// The human-readable name of the sample
