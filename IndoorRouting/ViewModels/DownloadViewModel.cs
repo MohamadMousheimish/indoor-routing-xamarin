@@ -189,7 +189,36 @@ namespace IndoorRouting
         /// <returns>The data folder.</returns>
         internal static string GetDataFolder()
         {
-            return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string sampleDataFolder = Path.Combine(appDataFolder, "ArcGISRuntimeSampleData");
+            if (!Directory.Exists(sampleDataFolder))
+            {
+                Directory.CreateDirectory(sampleDataFolder);
+            }
+            return sampleDataFolder;
+        }
+
+        /// <summary>
+        /// Gets the path to an item on disk. 
+        /// The item must have already been downloaded for the path to be valid.
+        /// </summary>
+        /// <param name="itemId">ID of the portal item</param>
+        /// <returns></returns>
+        internal static string GetDataFolder(string itemId)
+        {
+            return Path.Combine(GetDataFolder(), itemId);
+        }
+
+        /// <summary>
+        /// Gets the path to an item on disk.
+        /// The item must have already been downloaded for the path to be valid.
+        /// </summary>
+        /// <param name="itemId">Id of the portal item.</param>
+        /// <param name="pathParts">Components of the path</param>
+        /// <returns></returns>
+        internal static string GetDataFolder(string itemId, params string[] pathParts)
+        {
+            return Path.Combine(GetDataFolder(itemId), Path.Combine(pathParts));
         }
 
         /// <summary>

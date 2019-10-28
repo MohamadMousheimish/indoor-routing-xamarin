@@ -13,10 +13,6 @@ namespace IndoorRouting.Managers
 {
     public static class DataManager
     {
-        private static Task DownloadItem(PortalItem item)
-        {
-            return DownloadItem(item, CancellationToken.None);
-        }
 
         /// <summary>
         /// Downloads a portal item and leaves markers to track download date.
@@ -121,23 +117,6 @@ namespace IndoorRouting.Managers
             }
         }
 
-        public static Task DownloadDataItem(string itemId)
-        {
-            return DownloadDataItem(itemId, CancellationToken.None);
-        }
-
-        public static async Task DownloadDataItem(string itemId, CancellationToken cancellationToken)
-        {
-            // Create ArcGIS portal item
-            var portal = await ArcGISPortal.CreateAsync(cancellationToken).ConfigureAwait(false);
-            var item = await PortalItem.CreateAsync(portal, itemId, cancellationToken).ConfigureAwait(false);
-            // Download item if not already presemt
-            if (!IsDataPresent(item))
-            {
-                await DownloadItem(item, cancellationToken);
-            }
-        }
-
         public static async Task WithCancellation(this Task baseTask, CancellationToken token)
         {
             var tcs = new TaskCompletionSource<bool>();
@@ -151,11 +130,6 @@ namespace IndoorRouting.Managers
                     throw new OperationCanceledException(token);
                 }
             }
-        }
-
-        private static async Task UnpackData(string zipFile, string folder)
-        {
-            await UnpackData(zipFile, folder, CancellationToken.None);
         }
 
         /// <summary>
@@ -189,13 +163,7 @@ namespace IndoorRouting.Managers
         /// <returns></returns>
         internal static string GetDataFolder()
         {
-#if NETFX_CORE
-            string appDataFolder = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
-#elif XAMARIN
-            string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-#else
-            string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-#endif
+            string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string sampleDataFolder = Path.Combine(appDataFolder, "ArcGISRuntimeSampleData");
             if (!Directory.Exists(sampleDataFolder))
             {
@@ -210,22 +178,7 @@ namespace IndoorRouting.Managers
         /// </summary>
         /// <param name="itemId">ID of the portal item</param>
         /// <returns></returns>
-        internal static string GetDataFolder(string itemId)
-        {
-            return Path.Combine(GetDataFolder(), itemId);
-        }
-
-        /// <summary>
-        /// Gets the path to an item on disk.
-        /// The item must have already been downloaded for the path to be valid.
-        /// </summary>
-        /// <param name="itemId">Id of the portal item.</param>
-        /// <param name="pathParts">Components of the path</param>
-        /// <returns></returns>
-        internal static string GetDataFolder(string itemId, params string[] pathParts)
-        {
-            return Path.Combine(GetDataFolder(itemId), Path.Combine(pathParts));
-        }
+        internal static string GetDataFolder(string itemId) => Path.Combine(GetDataFolder(), itemId);
 
     }
 }

@@ -162,6 +162,50 @@ namespace IndoorRouting
         }
 
         /// <summary>
+        /// Loads the mobile map package and the map 
+        /// </summary>
+        /// <returns>Async task</returns>
+        internal async Task InitializeAndroidMapViewAsync()
+        {
+            try
+            {
+                // Get Mobile Map Package from the location on device
+                var mmpk = await LoadAndroidMMPKAsync().ConfigureAwait(false);
+
+                // Display map from the mmpk. Assumption is made that the first map of the mmpk is the one used
+                this.Map = mmpk.Maps.FirstOrDefault();
+
+                // Sets a basemap from ArcGIS Online if specified
+                // Replace basemap with any online basemap 
+                if (AppSettings.CurrentSettings.UseOnlineBasemap)
+                {
+                    var basemap = Basemap.CreateLightGrayCanvasVector();
+                    this.Map.Basemap = basemap;
+                }
+
+                // Load map
+                await Map.LoadAsync().ConfigureAwait(false);
+
+                // Get the locator to be used in the app
+                var locator = mmpk.LocatorTask;
+                await locator.LoadAsync().ConfigureAwait(false);
+
+                // Create instance of the Location View Model
+                if (LocationViewModel.Instance == null)
+                {
+                    LocationViewModel.Instance = LocationViewModel.Create(Map, locator);
+                }
+
+                // Set viewpoint of the map depending on user's setting
+                await this.SetInitialViewPointAsync().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Sets the initial view point based on user settings. 
         /// </summary>
         /// <returns>Async task</returns>
@@ -298,7 +342,24 @@ namespace IndoorRouting
                 var mmpk = await MobileMapPackage.OpenAsync(Path.Combine(DownloadViewModel.GetDataFolder(), AppSettings.CurrentSettings.PortalItemName));
                 return mmpk;
             }
-            catch
+            catch(Exception e)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads the MMPK from the location on disk
+        /// </summary>
+        /// <returns>The MMPKA sync.</returns>
+        private async Task<MobileMapPackage> LoadAndroidMMPKAsync()
+        {
+            try
+            {
+                var mmpk = await MobileMapPackage.OpenAsync(Path.Combine(DownloadViewModel.GetDataFolder("52346d5fc4c348589f976b6a279ec3e6"), AppSettings.CurrentSettings.PortalItemName));
+                return mmpk;
+            }
+            catch (Exception e)
             {
                 return null;
             }
