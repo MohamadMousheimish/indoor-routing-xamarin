@@ -9,6 +9,7 @@ using Android.Support.V4.Content;
 using Android.Text;
 using Android.Views;
 using Android.Widget;
+using Esri.ArcGISRuntime;
 using Esri.ArcGISRuntime.Geometry;
 using Esri.ArcGISRuntime.Location;
 using Esri.ArcGISRuntime.Mapping;
@@ -46,9 +47,8 @@ namespace IndoorRouting.IndoorTest
         private MapView _myMapView;
         private AutoCompleteTextView _mySearchBox;
         private ListView _searchListView;
+        private ListView _floorsTableView;
         private ProgressBar _myProgressBar;
-        private LocationViewModel _locationViewModel;
-        private GraphicsOverlay _waypointOverlay;
 
         /// <summary>
         /// Gets or sets the map view model containing the common logic for dealing with the map
@@ -57,7 +57,7 @@ namespace IndoorRouting.IndoorTest
 
         public IndoorTest() : base()
         {
-            this.ViewModel = new MapViewModel();
+            ViewModel = new MapViewModel();
         }
 
         protected override async void OnCreate(Bundle bundle)
@@ -66,8 +66,6 @@ namespace IndoorRouting.IndoorTest
             Title = "Open Mobile Map (map package)";
             CreateLayout();
             Initialize();
-            //await ViewModel.InitializeAndroidMapViewAsync();
-            ViewModel.PropertyChanged += ViewModelPropertyChanged;
         }
 
         private void CreateLayout()
@@ -82,9 +80,13 @@ namespace IndoorRouting.IndoorTest
             // Disable multi-line search
             _mySearchBox.SetMaxLines(1);
 
-            //List View
+            //Auto Complete Drop Down List View
             _searchListView = new ListView(this);
             layout.AddView(_searchListView);
+
+            // Floors List View
+            _floorsTableView = new ListView(this);
+            layout.AddView(_floorsTableView);
 
             // Progress bar
             _myProgressBar = new ProgressBar(this) { Indeterminate = true, Visibility = ViewStates.Gone };
@@ -93,10 +95,6 @@ namespace IndoorRouting.IndoorTest
             // Add a map view to the layout
             _myMapView = new MapView(this);
             layout.AddView(_myMapView);
-
-            // Create and add an overlay for showing waypoints/stops.
-            _waypointOverlay = new GraphicsOverlay();
-            _myMapView.GraphicsOverlays.Add(_waypointOverlay);
 
             // Show the layout in the app
             SetContentView(layout);
@@ -110,11 +108,97 @@ namespace IndoorRouting.IndoorTest
                 // Call to populate autosuggestions
                 await GetSuggestionsFromLocatorAsync();
             };
+
+            // Handle the user moving the map 
+            _myMapView.NavigationCompleted += MapView_NavigationCompleted;
+
+            // Add a graphics overlay to hold the pins and route graphics
+            var pinsGraphicOverlay = new GraphicsOverlay
+            {
+                Id = "PinsGraphicsOverlay"
+            };
+            _myMapView.GraphicsOverlays.Add(pinsGraphicOverlay);
+
+            var labelsGraphicOverlay = new GraphicsOverlay
+            {
+                Id = "LabelsGraphicsOverlay"
+            };
+            _myMapView.GraphicsOverlays.Add(labelsGraphicOverlay);
+        }
+
+        private async void MapView_NavigationCompleted(object sender, EventArgs e)
+        {
+            // Display floors and level if user is zoomed in
+            // If user is zoomed out, only show the base layer
+            if(_myMapView.MapScale <= AppSettings.CurrentSettings.RoomsLayerMinimumZoomLevel)
+            {
+                await DisplayFloorLevelsAsync();
+            }
+            else
+            {
+                _floorsTableView.Visibility = ViewStates.Visible;
+                ViewModel.SetFloorVisibility(false);
+            }
+        }
+
+        /// <summary>
+        /// Display the floor levels based on which building the current viewpoint is over
+        /// </summary>
+        /// <returns>The floor levels.</returns>
+        private async Task DisplayFloorLevelsAsync()
+        {
+            if(_myMapView.Map.LoadStatus == LoadStatus.Loaded)
+            {
+                try
+                {
+                    var floorsViewModel = new FloorSelectorViewModel();
+                    var tableItems = await floorsViewModel.GetFloorsInVisibleAreaAsync(_myMapView);
+
+                    // Only show the floors tableview if the buildings in view have more than one floor
+                    if(tableItems.Count() > 1)
+                    {
+                        // Show the table view and populate it
+                        _floorsTableView.Visibility = ViewStates.Invisible;
+                        _floorsTableView.ItemClick += FloorListView_TableRowSelected;
+
+                        if(string.IsNullOrEmpty(ViewModel.SelectedFloorLevel) || !tableItems.Contains(ViewModel.SelectedFloorLevel))
+                        {
+                            ViewModel.SelectedFloorLevel = MapViewModel.DefaultFloorLevel;
+                        }
+                        // Turn layers on. If there is no floor selected, first floor will be displayed by default
+                        ViewModel.SetFloorVisibility(true);
+                    }
+                    else if(tableItems.Count() == 1)
+                    {
+                        DismissFloorsTableView();
+                        ViewModel.SelectedFloorLevel = tableItems[0];
+                        // Turn layers on. If there is no floor selected, first floor will be displayed by default
+                        ViewModel.SetFloorVisibility(true);
+                    }
+                }
+                catch
+                {
+                    DismissFloorsTableView();
+                }
+            }
+        }
+
+        private void FloorListView_TableRowSelected(object sender, ItemClickEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// When called, clears all values and hide table view
+        /// </summary>
+        private void DismissFloorsTableView()
+        {
+            _floorsTableView.Visibility = ViewStates.Invisible;
         }
 
         private async Task GetSuggestionsFromLocatorAsync()
         {
-            var suggestions = await _locationViewModel.GetLocationSuggestionsAsync(_mySearchBox.Text);
+            var suggestions = await LocationViewModel.Instance.GetLocationSuggestionsAsync(_mySearchBox.Text);
             if (suggestions != null && suggestions.Count > 0)
             {
                 if(!(suggestions.Count == 1 && suggestions.FirstOrDefault().Label == _mySearchBox.Text))
@@ -134,14 +218,14 @@ namespace IndoorRouting.IndoorTest
                     // Create an array adapter to provide autocomplete suggestions
                     var adapter = new ArrayAdapter(this, Resource.Layout.SimpleSpinnerItem, results);
                     _searchListView.Adapter = adapter;
-                    _searchListView.ItemClick += AutoCompleteSearchSelected;
+                    _searchListView.ItemClick += SearchItemSelected;
                 }
                 else
                 {
                     // Create an array adapter to provide autocomplete suggestions
                     var adapter = new ArrayAdapter(this, Resource.Layout.SimpleSpinnerItem, new List<string>());
                     _searchListView.Adapter = adapter;
-                    _searchListView.ItemClick += AutoCompleteSearchSelected;
+                    _searchListView.ItemClick += SearchItemSelected;
                 }
             }
             else
@@ -155,7 +239,7 @@ namespace IndoorRouting.IndoorTest
             }
         }
 
-        private async void AutoCompleteSearchSelected(object sender, ItemClickEventArgs e)
+        private async void SearchItemSelected(object sender, ItemClickEventArgs e)
        {
             var selectedFromList = (string)_searchListView.GetItemAtPosition(e.Position);
             if(selectedFromList != _mySearchBox.Text)
@@ -168,18 +252,40 @@ namespace IndoorRouting.IndoorTest
 
         private async Task GetSearchedFeatureAsync(string searchText)
         {
-            var geocodeResult = await _locationViewModel.GetSearchedLocationAsync(searchText);
-            //var floorLevel = await _locationViewModel.GetFloorLevelFromQueryAsync(searchText);
-            //ViewModel.SelectedFloorLevel = floorLevel;
+
+         
+            var geocodeResult = await LocationViewModel.Instance.GetSearchedLocationAsync(searchText);
+            var floorLevel = await LocationViewModel.Instance.GetFloorLevelFromQueryAsync(searchText);
+           
+            ViewModel.SelectedFloorLevel = floorLevel;
+        
             if (geocodeResult != null)
             {
-                // Create a picture marker symbol
-                if (_waypointOverlay.Graphics.Count == 1)
+
+                var pinGraphic = await GraphicForPoint(geocodeResult.DisplayLocation);
+                // Add pin to map
+                var graphicsOverlay = _myMapView.GraphicsOverlays["PinsGraphicsOverlay"];
+                graphicsOverlay.Graphics.Clear();
+                graphicsOverlay.Graphics.Add(pinGraphic);
+                graphicsOverlay.IsVisible = true;
+                ViewModel.Viewpoint = new Viewpoint(geocodeResult.DisplayLocation, 150);
+
+                // Get the feature to populate the Contact Card
+                var roomFeature = await LocationViewModel.Instance.GetRoomFeatureAsync(searchText);
+                if(roomFeature != null)
                 {
-                    _waypointOverlay.Graphics.Remove(_waypointOverlay.Graphics.FirstOrDefault());
+                    // Get room attribute from the settings. First attribute should be set as the searcheable one
+                    var roomAttribute = AppSettings.CurrentSettings.ContactCardDisplayFields[0];
+                    var roomNumber = roomFeature.Attributes[roomAttribute];
+                    var roomNumberLabel = roomNumber ?? string.Empty;
+                    var employeeNameLabel = string.Empty;
+                    if(AppSettings.CurrentSettings.ContactCardDisplayFields.Count > 1)
+                    {
+                        var employeeNameAttribute = AppSettings.CurrentSettings.ContactCardDisplayFields[1];
+                        var employeeName = roomFeature.Attributes[employeeNameAttribute];
+                        employeeNameLabel = employeeName as string ?? string.Empty;
+                    }
                 }
-                _waypointOverlay.Graphics.Add(await GraphicForPoint(geocodeResult.DisplayLocation));
-                _myMapView.SetViewpoint(new Viewpoint(geocodeResult.DisplayLocation, 500));
             }
         }
 
@@ -215,36 +321,11 @@ namespace IndoorRouting.IndoorTest
             var settingsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
             AppSettings.CurrentSettings = await AppSettings.CreateAsync(Path.Combine(settingsPath, "AppSettings.xml")).ConfigureAwait(false);
 
-            // Get the path to the mobile map package
-            var filePath = GetMmpkPath();
-            try
-            {
-                // Open the map package
-                var package = await MobileMapPackage.OpenAsync(Path.Combine(filePath));
-                InitializeMapSetting(package);
-            }
-            catch (Exception e)
-            {
-                ShowMessage(e.ToString());
-            }
-        }
-
-        private void InitializeMapSetting(MobileMapPackage mapPackage)
-        {
-            // Show the first map
-            _myMapView.Map = mapPackage.Maps.First();
-
-            // Ask for location permissions. Events wired up in OnRequestPermissionResult
-            // AskForLocationPermission();
-
-            // Initialize the LocatorTask with the provided service Uri
-            _geocoder = mapPackage.LocatorTask;
-            if (_locationViewModel == null)
-            {
-                _locationViewModel = LocationViewModel.Create(_myMapView.Map, _geocoder);                    
-            }
+            ViewModel.PropertyChanged += ViewModelPropertyChanged;
+            await ViewModel.InitializeAndroidMapViewAsync();
             _mySearchBox.Enabled = true;
         }
+
 
         /// <summary>
         /// Fires when properties change in the MapViewModel
@@ -261,14 +342,13 @@ namespace IndoorRouting.IndoorTest
                         // Add the map to the MapView to be displayedd
                         _myMapView.Map = ViewModel.Map;
                     }
-
                     break;
+
                 case "Viewpoint":
                     if (ViewModel.Viewpoint != null)
                     {
                         await _myMapView.SetViewpointAsync(ViewModel.Viewpoint);
                     }
-
                     break;
             }
         }
@@ -277,19 +357,6 @@ namespace IndoorRouting.IndoorTest
         {
             // Hide the callout.
             _myMapView.DismissCallout();
-        }
-
-        private string GetMmpkPath()
-        {
-            return DownloadViewModel.GetDataFolder("52346d5fc4c348589f976b6a279ec3e6", "RedlandsCampus.mmpk");
-        }
-
-        private void ShowMessage(string message, string title = "Error")
-        {
-            using (AlertDialog.Builder builder = new AlertDialog.Builder(this))
-            {
-                builder.SetTitle(title).SetMessage(message).Show();
-            }
         }
 
         private void LocationDisplayChanged(object sender, Location e)
