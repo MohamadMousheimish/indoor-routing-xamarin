@@ -84,17 +84,22 @@ namespace IndoorRouting.IndoorTest
             _searchListView = new ListView(this);
             layout.AddView(_searchListView);
 
-            // Floors List View
-            _floorsTableView = new ListView(this);
-            layout.AddView(_floorsTableView);
-
             // Progress bar
             _myProgressBar = new ProgressBar(this) { Indeterminate = true, Visibility = ViewStates.Gone };
             layout.AddView(_myProgressBar);
 
+            // Floors List View
+            _floorsTableView = new ListView(this);
+            _floorsTableView.LayoutParameters = new ViewGroup.LayoutParams(100, 200);
+            _floorsTableView.TextAlignment = TextAlignment.Center;
+            _floorsTableView.Visibility = ViewStates.Gone;
+
+            layout.AddView(_floorsTableView);
+
             // Add a map view to the layout
             _myMapView = new MapView(this);
             layout.AddView(_myMapView);
+
 
             // Show the layout in the app
             SetContentView(layout);
@@ -136,7 +141,7 @@ namespace IndoorRouting.IndoorTest
             }
             else
             {
-                _floorsTableView.Visibility = ViewStates.Visible;
+                // _floorsTableView.Visibility = ViewStates.Visible;
                 ViewModel.SetFloorVisibility(false);
             }
         }
@@ -157,8 +162,13 @@ namespace IndoorRouting.IndoorTest
                     // Only show the floors tableview if the buildings in view have more than one floor
                     if(tableItems.Count() > 1)
                     {
+
+                        var floors = new List<string>(tableItems.ToList());
+                        var adapter = new ArrayAdapter(this, Resource.Layout.SimpleSpinnerItem, floors);
+                        _floorsTableView.Adapter = adapter;
+
                         // Show the table view and populate it
-                        _floorsTableView.Visibility = ViewStates.Invisible;
+                        _floorsTableView.Visibility = ViewStates.Visible;
                         _floorsTableView.ItemClick += FloorListView_TableRowSelected;
 
                         if(string.IsNullOrEmpty(ViewModel.SelectedFloorLevel) || !tableItems.Contains(ViewModel.SelectedFloorLevel))
@@ -185,7 +195,9 @@ namespace IndoorRouting.IndoorTest
 
         private void FloorListView_TableRowSelected(object sender, ItemClickEventArgs e)
         {
-
+            var selectedItem = (string)_floorsTableView.GetItemAtPosition(e.Position);
+            ViewModel.SelectedFloorLevel = selectedItem;
+            ViewModel.SetFloorVisibility(true);
         }
 
         /// <summary>
@@ -193,7 +205,7 @@ namespace IndoorRouting.IndoorTest
         /// </summary>
         private void DismissFloorsTableView()
         {
-            _floorsTableView.Visibility = ViewStates.Invisible;
+            _floorsTableView.Visibility = ViewStates.Gone;
         }
 
         private async Task GetSuggestionsFromLocatorAsync()

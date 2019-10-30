@@ -313,11 +313,7 @@ namespace IndoorRouting
                     }
 
                     // select chosen floor
-                    featureLayer.DefinitionExpression = string.Format(
-                        "{0} = '{1}'",
-                        AppSettings.CurrentSettings.RoomsLayerFloorColumnName,
-                    this.SelectedFloorLevel);
-
+                    featureLayer.DefinitionExpression = string.Format("{0} = '{1}'", AppSettings.CurrentSettings.RoomsLayerFloorColumnName, this.SelectedFloorLevel);
                     opLayer.IsVisible = areLayersOn;
             }
         }
