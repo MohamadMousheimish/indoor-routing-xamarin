@@ -80,15 +80,15 @@ namespace IndoorRouting
             {
                 var locatorInfo = this.Locator.LocatorInfo;
 
-                //if (locatorInfo.SupportsSuggestions)
-                //{
-                // restrict the search to return no more than 10 suggestions
-                var suggestParams = new SuggestParameters { MaxResults = 10 };
+                if (locatorInfo.SupportsSuggestions)
+                {
+                    // restrict the search to return no more than 10 suggestions
+                    var suggestParams = new SuggestParameters { MaxResults = 10 };
 
-                // get suggestions for the text provided by the user
-                var suggestions = await this.Locator.SuggestAsync(userInput, suggestParams);
-                return suggestions;
-                // }
+                    // get suggestions for the text provided by the user
+                    var suggestions = await this.Locator.SuggestAsync(userInput, suggestParams);
+                    return suggestions;
+                }
             }
             catch
             {

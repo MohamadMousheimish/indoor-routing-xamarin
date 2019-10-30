@@ -593,7 +593,6 @@ namespace IndoorRouting.iOS
                             var employeeNameLabel = string.Empty;
                             if (AppSettings.CurrentSettings.ContactCardDisplayFields.Count > 1)
                             {
-
                                 var employeeNameAttribute = AppSettings.CurrentSettings.ContactCardDisplayFields[1];
                                 var employeeName = identifiedResult.Attributes[employeeNameAttribute];
                                 employeeNameLabel = employeeName as string ?? string.Empty;

@@ -48,6 +48,9 @@ namespace IndoorRouting.IndoorTest
         private AutoCompleteTextView _mySearchBox;
         private ListView _searchListView;
         private ListView _floorsTableView;
+        private LinearLayout _informationLayout;
+        private TextView _mainTextView;
+        private TextView _secondaryTextView;
 
         /// <summary>
         /// Gets or sets the map view model containing the common logic for dealing with the map
@@ -67,10 +70,53 @@ namespace IndoorRouting.IndoorTest
             Initialize();
         }
 
+        private async void Initialize()
+        {
+            // When the application has finished loading, bring in the settings
+            var settingsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+            AppSettings.CurrentSettings = await AppSettings.CreateAsync(System.IO.Path.Combine(settingsPath, "AppSettings.xml")).ConfigureAwait(false);
+
+            ViewModel.PropertyChanged += ViewModelPropertyChanged;
+            await ViewModel.InitializeAndroidMapViewAsync();
+            _mySearchBox.Enabled = true;
+        }
+
         private void CreateLayout()
         {
-            var root = new RelativeLayout(this);
-            var linearLayout = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            var relativeLayout = new RelativeLayout(this);
+            var informationParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+            var root = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            var floorLayoutParams = new RelativeLayout.LayoutParams(250, 250);
+            var infoLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+            var searchBoxParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            var searchViewParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            var mapParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+            var floorsListParams = new RelativeLayout.LayoutParams(DpToPx(35), DpToPx(250));
+
+
+            _mainTextView = new TextView(this);
+            _secondaryTextView = new TextView(this);
+
+            _informationLayout = new LinearLayout(this) { Orientation = Orientation.Vertical, Visibility = ViewStates.Gone };
+            _informationLayout.AddView(_mainTextView, informationParams);
+            _informationLayout.AddView(_secondaryTextView, informationParams);
+
+
+            _floorsTableView = new ListView(this)
+            {
+                TextAlignment = TextAlignment.Center,
+                Visibility = ViewStates.Gone
+            };
+            _floorsTableView.SetPadding(DpToPx(25), DpToPx(50), 0, 0);
+
+            floorLayoutParams.AddRule(LayoutRules.CenterInParent);
+            floorLayoutParams.AddRule(LayoutRules.AlignParentLeft);
+
+
+            infoLayoutParams.AddRule(LayoutRules.AlignParentBottom);
+            _informationLayout.SetBackgroundColor(Color.LightGray);
+
+            //.SetMargins(DpToPx(16), 0, 0, DpToPx(16));
 
             _mySearchBox = new AutoCompleteTextView(this) { Hint = "Search rooms or people..." };
 
@@ -79,12 +125,10 @@ namespace IndoorRouting.IndoorTest
 
             // Disable the buttons and search bar until geocoder is ready
             _mySearchBox.Enabled = false;
-            var searchBoxParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             searchBoxParams.AddRule(LayoutRules.AlignParentTop);
 
             //Auto Complete Drop Down List View
             _searchListView = new ListView(this);
-            var searchViewParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             searchViewParams.AddRule(LayoutRules.AlignParentBottom);
 
             // Hook up the UI event handlers for suggestion & search
@@ -98,20 +142,9 @@ namespace IndoorRouting.IndoorTest
 
             // Handle the user moving the map 
             _myMapView.NavigationCompleted += MapView_NavigationCompleted;
-            var mapParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
 
-            _floorsTableView = new ListView(this)
-            {
-                TextAlignment = TextAlignment.Center,
-                Visibility = ViewStates.Gone
-            };
-            _floorsTableView.SetPadding(0, DpToPx(50), 0, 0);
-            var floorsListParams = new RelativeLayout.LayoutParams(DpToPx(35), DpToPx(150));
-            floorsListParams.AddRule(LayoutRules.AlignParentStart);
-            floorsListParams.AddRule(LayoutRules.CenterInParent);
-            floorsListParams.AddRule(LayoutRules.AlignParentLeft);
-            floorsListParams.SetMargins(DpToPx(16), 0, 0, DpToPx(16));
-
+            // Handle the user tapping on the map
+            _myMapView.GeoViewTapped += MapView_GeoViewTapped;
 
             // Add a graphics overlay to hold the pins and route graphics
             var pinsGraphicOverlay = new GraphicsOverlay
@@ -120,14 +153,15 @@ namespace IndoorRouting.IndoorTest
             };
             _myMapView.GraphicsOverlays.Add(pinsGraphicOverlay);
 
-            root.AddView(_myMapView, mapParams);
-            root.AddView(_floorsTableView, floorsListParams);
+            relativeLayout.AddView(_myMapView, mapParams);
+            relativeLayout.AddView(_floorsTableView, floorLayoutParams);
+            relativeLayout.AddView(_informationLayout, infoLayoutParams);
 
-            linearLayout.AddView(_mySearchBox);
-            linearLayout.AddView(_searchListView);
-            linearLayout.AddView(root);
+            root.AddView(_mySearchBox);
+            root.AddView(_searchListView);
+            root.AddView(relativeLayout);
 
-            SetContentView(linearLayout);
+            SetContentView(root);
         }
 
         private async void MapView_NavigationCompleted(object sender, EventArgs e)
@@ -143,6 +177,66 @@ namespace IndoorRouting.IndoorTest
                 _floorsTableView.Visibility = ViewStates.Gone;
                 ViewModel.SetFloorVisibility(false);
             }
+        }
+
+        /// <summary>
+        /// When map is tapped, clear the map of selection, close keyboard and bottom sheet
+        /// </summary>
+        /// <param name="sender">Sender element</param>
+        /// <param name="e">Event Args</param>
+        private async void MapView_GeoViewTapped(object sender, GeoViewInputEventArgs e)
+        {
+            try
+            {
+                // Wait for double tap to fire
+                await Task.Delay(500);
+
+                var tapScreenPoint = e.Position;
+                var layer = _myMapView.Map.OperationalLayers[AppSettings.CurrentSettings.RoomsLayerIndex];
+                var pixelTolerance = 10;
+                var returnPopusOnly = false;
+                var maxResults = 1;
+
+                //Identify a layer using MapView, passing in the layer, the tap point, tolerance, types to return and max result
+                var idResult = await _myMapView.IdentifyLayerAsync(layer, tapScreenPoint, pixelTolerance, returnPopusOnly, maxResults);
+                var identifiedResult = idResult.GeoElements.First();
+                var pinGraphic = await GraphicForPoint(identifiedResult.Geometry.Extent.GetCenter());
+
+                // Add pin to mapview
+                var graphicsOverlay = _myMapView.GraphicsOverlays["PinsGraphicsOverlay"];
+                graphicsOverlay.Graphics.Clear();
+                graphicsOverlay.Graphics.Add(pinGraphic);
+
+                // Get room attribute from the settings. First attribute should be set as the searchable one
+                var roomAttribute = AppSettings.CurrentSettings.ContactCardDisplayFields[0];
+                var roomNumber = identifiedResult.Attributes[roomAttribute];
+                if(roomNumber != null)
+                {
+                    var employeeNameLabel = string.Empty;
+                    if(AppSettings.CurrentSettings.ContactCardDisplayFields.Count > 1)
+                    {
+                        var employeeNameAttribute = AppSettings.CurrentSettings.ContactCardDisplayFields[1];
+                        var employeeName = identifiedResult.Attributes[employeeNameAttribute];
+                        employeeNameLabel = employeeName as string ?? string.Empty;
+                    }
+
+                    ShowInformationCard(roomNumber.ToString(), employeeNameLabel.ToString());
+                }
+
+            }
+            catch
+            {
+                _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].Graphics.Clear();
+                _informationLayout.Visibility = ViewStates.Gone;
+            }
+
+        }
+
+        private void ShowInformationCard(string mainLabel, string secondaryLabel)
+        {
+            _mainTextView.Text = mainLabel;
+            _secondaryTextView.Text = secondaryLabel;
+            _informationLayout.Visibility = ViewStates.Visible;
         }
 
         /// <summary>
@@ -162,11 +256,10 @@ namespace IndoorRouting.IndoorTest
                     if(tableItems.Count() > 1)
                     {
 
+                        // Show the table view and populate it
                         var floors = new List<string>(tableItems.ToList());
                         var adapter = new ArrayAdapter(this, Resource.Layout.SimpleSpinnerItem, floors);
                         _floorsTableView.Adapter = adapter;
-
-                        // Show the table view and populate it
                         _floorsTableView.Visibility = ViewStates.Visible;
                         _floorsTableView.ItemClick += FloorListView_TableRowSelected;
 
@@ -184,6 +277,11 @@ namespace IndoorRouting.IndoorTest
                         // Turn layers on. If there is no floor selected, first floor will be displayed by default
                         ViewModel.SetFloorVisibility(true);
                     }
+                    else
+                    {
+                        DismissFloorsTableView();
+                        ViewModel.SetFloorVisibility(true);
+                    }
                 }
                 catch
                 {
@@ -194,11 +292,10 @@ namespace IndoorRouting.IndoorTest
 
         private void FloorListView_TableRowSelected(object sender, ItemClickEventArgs e)
         {
-            // Add pin to map
-            var graphicsOverlay = _myMapView.GraphicsOverlays["PinsGraphicsOverlay"];
-            graphicsOverlay.Graphics.Clear();
-            graphicsOverlay.IsVisible = false;
+            // Remove pins from map
+            _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].Graphics.Clear();
             _mySearchBox.Text = string.Empty;
+            _informationLayout.Visibility = ViewStates.Gone;
 
             var selectedItem = (string)_floorsTableView.GetItemAtPosition(e.Position);
             var listViewElement = (ListView)sender;
@@ -213,6 +310,7 @@ namespace IndoorRouting.IndoorTest
         private void DismissFloorsTableView()
         {
             _floorsTableView.Visibility = ViewStates.Gone;
+            _informationLayout.Visibility = ViewStates.Gone;
         }
 
         private async Task GetSuggestionsFromLocatorAsync()
@@ -266,6 +364,8 @@ namespace IndoorRouting.IndoorTest
                 _mySearchBox.Text = selectedFromList;
                 _mySearchBox.Adapter = new ArrayAdapter(this, Resource.Layout.SimpleSpinnerItem);
                 await GetSearchedFeatureAsync(_mySearchBox.Text);
+                _informationLayout.Visibility = ViewStates.Gone;
+
             }
         }
 
@@ -313,17 +413,6 @@ namespace IndoorRouting.IndoorTest
             }
 
             return null;
-        }
-
-        private async void Initialize()
-        {
-            // When the application has finished loading, bring in the settings
-            var settingsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
-            AppSettings.CurrentSettings = await AppSettings.CreateAsync(System.IO.Path.Combine(settingsPath, "AppSettings.xml")).ConfigureAwait(false);
-
-            ViewModel.PropertyChanged += ViewModelPropertyChanged;
-            await ViewModel.InitializeAndroidMapViewAsync();
-            _mySearchBox.Enabled = true;
         }
 
 
