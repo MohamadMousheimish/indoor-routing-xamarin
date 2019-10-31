@@ -55,10 +55,6 @@ namespace IndoorRouting.Managers
 
             // Create a tree from the list of all samples
             FullTree = BuildFullTree(AllSamples);
-
-            // Add a special category for featured samples
-            var featured = new SearchableTreeNode("Featured", AllSamples.Where(sample => sample.Tags.Contains("Featured")));
-            FullTree.Items.Insert(0, featured);
         }
 
         /// <summary>
@@ -120,31 +116,6 @@ namespace IndoorRouting.Managers
             return new SearchableTreeNode(
                 name: byCategory.Key,
                 items: byCategory.OrderBy(si => si.SampleName.ToLower()).ToList());
-        }
-
-        /// <summary>
-        /// Constructs the sample control from the provided sampleModel.
-        /// </summary>
-        /// <param name="sampleModel"></param>
-        /// <returns></returns>
-        public object SampleToControl(SampleInfo sampleModel)
-        {
-            return Activator.CreateInstance(sampleModel.SampleType);
-        }
-
-        /// <summary>
-        /// Common sample search predicate implementation
-        /// </summary>
-        /// <param name="sample">Sample to evaluate</param>
-        /// <param name="searchText">Query</param>
-        /// <returns><c>True</c> if the sample matches the query.</returns>
-        public bool SampleSearchFunc(SampleInfo sample, string searchText)
-        {
-            searchText = searchText.ToLower();
-            return sample.SampleName.ToLower().Contains(searchText) ||
-                   sample.Category.ToLower().Contains(searchText) ||
-                   sample.Description.ToLower().Contains(searchText) ||
-                   sample.Tags.Any(t => t.ToLower().Contains(searchText));
         }
 
     }

@@ -17,7 +17,6 @@ namespace IndoorRouting.Android
     {
         private List<SearchableTreeNode> _sampleCategories;
         private List<SearchableTreeNode> _filteredSampleCategories;
-        private ExpandableListView _categoriesListView;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -31,18 +30,7 @@ namespace IndoorRouting.Android
                 SampleManager.Current.Initialize();
                 _sampleCategories = SampleManager.Current.FullTree.Items.OfType<SearchableTreeNode>().ToList();
                 _filteredSampleCategories = _sampleCategories;
-
-                // Set up the custom ArrayAdapter for displaying the Categories
-                var categoriesAdapter = new CategoriesAdapter(this, _sampleCategories);
-                _categoriesListView = FindViewById<ExpandableListView>(Resource.Id.categoriesListView);
-                _categoriesListView.SetAdapter(categoriesAdapter);
-                _categoriesListView.ChildClick += CategoriesListViewOnChildClick;
-                _categoriesListView.DividerHeight = 2;
-                _categoriesListView.SetGroupIndicator(null);
-
-                // Set up the search filtering
-                var searchBox = FindViewById<SearchView>(Resource.Id.categorySearchView);
-                searchBox.QueryTextChange += SearchBoxOnQueryTextChange;
+                CategoriesListViewOnChildClick();
             }
             catch(Exception ex)
             {
@@ -50,27 +38,7 @@ namespace IndoorRouting.Android
             }
         }
 
-        private void SearchBoxOnQueryTextChange(object sender, SearchView.QueryTextChangeEventArgs queryTextChangeEventArgs)
-        {
-            var stnResult = SampleManager.Current.FullTree.Search(sample => SampleManager.Current.SampleSearchFunc(sample, queryTextChangeEventArgs.NewText));
-            if(stnResult != null)
-            {
-                _filteredSampleCategories = stnResult.Items.OfType<SearchableTreeNode>().ToList();
-            }
-            else
-            {
-                _filteredSampleCategories = new List<SearchableTreeNode>();
-            }
-            _categoriesListView.SetAdapter(new CategoriesAdapter(this, _filteredSampleCategories));
-
-            // Expand all entries; makes it easier to see search results
-            for (int index = 0; index < _filteredSampleCategories.Count; index++)
-            {
-                _categoriesListView.ExpandGroup(index);
-            }
-        }
-
-        private async void CategoriesListViewOnChildClick(object sender, ExpandableListView.ChildClickEventArgs childClickEventArgs)
+        private async void CategoriesListViewOnChildClick()
         {
             var sampleName = string.Empty;
             try
@@ -79,7 +47,7 @@ namespace IndoorRouting.Android
                 ClearCredentials();
 
                 //Get the clicked item
-                var item = (SampleInfo)_filteredSampleCategories[childClickEventArgs.GroupPosition].Items[childClickEventArgs.ChildPosition];
+                var item = (SampleInfo)_filteredSampleCategories[0].Items[0];
 
                 // Download any offline data before showing the sample
                 if(item.OfflineDataItems != null)
@@ -90,7 +58,7 @@ namespace IndoorRouting.Android
                     {
                         Indeterminate = true
                     });
-                    builder.SetMessage("Downloading data");
+                    builder.SetMessage("Getting Map data");
                     var dialog = builder.Create();
                     dialog.Show();
 

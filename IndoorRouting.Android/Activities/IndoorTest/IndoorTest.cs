@@ -2,6 +2,8 @@
 using Android.App;
 using Android.Content.PM;
 using Android.Graphics;
+using Android.Graphics.Drawables;
+using Android.Graphics.Drawables.Shapes;
 using Android.OS;
 using Android.Runtime;
 using Android.Support.Design.Widget;
@@ -83,9 +85,10 @@ namespace IndoorRouting.IndoorTest
 
         private void CreateLayout()
         {
-            var relativeLayout = new RelativeLayout(this);
-            var informationParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
             var root = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            var relativeLayout = new RelativeLayout(this);
+            var floorsLayout = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            var informationParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
             var floorLayoutParams = new RelativeLayout.LayoutParams(250, ViewGroup.LayoutParams.WrapContent);
             var infoLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
             var searchBoxParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
@@ -106,16 +109,20 @@ namespace IndoorRouting.IndoorTest
                 TextAlignment = TextAlignment.Center,
                 Visibility = ViewStates.Gone
             };
-            _floorsTableView.SetPadding(DpToPx(25), DpToPx(50), 0, 0);
 
+            var shape = new ShapeDrawable(new RectShape());
+            shape.Paint.Color = Color.Blue;
+            shape.Paint.StrokeWidth = 1;
+            shape.Paint.SetStyle(Paint.Style.Stroke);
+            _floorsTableView.SetBackgroundDrawable(shape);
+            _floorsTableView.SetBackgroundColor(Color.FloralWhite);
             floorLayoutParams.AddRule(LayoutRules.CenterInParent);
             floorLayoutParams.AddRule(LayoutRules.AlignParentLeft);
-
+            floorsLayout.AddView(_floorsTableView);
+            floorsLayout.SetPadding(75, 0, 0, 0);
 
             infoLayoutParams.AddRule(LayoutRules.AlignParentBottom);
             _informationLayout.SetBackgroundColor(Color.LightGray);
-
-            //.SetMargins(DpToPx(16), 0, 0, DpToPx(16));
 
             _mySearchBox = new AutoCompleteTextView(this) { Hint = "Search rooms or people..." };
 
@@ -153,7 +160,7 @@ namespace IndoorRouting.IndoorTest
             _myMapView.GraphicsOverlays.Add(pinsGraphicOverlay);
 
             relativeLayout.AddView(_myMapView, mapParams);
-            relativeLayout.AddView(_floorsTableView, floorLayoutParams);
+            relativeLayout.AddView(floorsLayout, floorLayoutParams);
             relativeLayout.AddView(_informationLayout, infoLayoutParams);
 
             root.AddView(_mySearchBox);
@@ -228,7 +235,6 @@ namespace IndoorRouting.IndoorTest
                 _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].Graphics.Clear();
                 _informationLayout.Visibility = ViewStates.Gone;
             }
-
         }
 
         private void ShowInformationCard(string mainLabel, string secondaryLabel)
@@ -261,7 +267,7 @@ namespace IndoorRouting.IndoorTest
                         _floorsTableView.Adapter = adapter;
                         _floorsTableView.Visibility = ViewStates.Visible;
                         _floorsTableView.ItemClick += FloorListView_TableRowSelected;
-
+                        _floorsTableView.ItemSelected += SelectItem;
                         if(string.IsNullOrEmpty(ViewModel.SelectedFloorLevel) || !tableItems.Contains(ViewModel.SelectedFloorLevel))
                         {
                             ViewModel.SelectedFloorLevel = MapViewModel.DefaultFloorLevel;
@@ -287,6 +293,12 @@ namespace IndoorRouting.IndoorTest
                     DismissFloorsTableView();
                 }
             }
+        }
+
+        private void SelectItem(object sender, ItemSelectedEventArgs e)
+        {
+            var listViewUsed = (ListView)sender;
+            var selectedItem = listViewUsed.SelectedItem;
         }
 
         private void FloorListView_TableRowSelected(object sender, ItemClickEventArgs e)
