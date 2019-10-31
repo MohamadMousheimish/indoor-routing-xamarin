@@ -109,7 +109,6 @@ namespace IndoorRouting.IndoorTest
                 TextAlignment = TextAlignment.Center,
                 Visibility = ViewStates.Gone
             };
-
             var shape = new ShapeDrawable(new RectShape());
             shape.Paint.Color = Color.Blue;
             shape.Paint.StrokeWidth = 1;
@@ -267,7 +266,6 @@ namespace IndoorRouting.IndoorTest
                         _floorsTableView.Adapter = adapter;
                         _floorsTableView.Visibility = ViewStates.Visible;
                         _floorsTableView.ItemClick += FloorListView_TableRowSelected;
-                        _floorsTableView.ItemSelected += SelectItem;
                         if(string.IsNullOrEmpty(ViewModel.SelectedFloorLevel) || !tableItems.Contains(ViewModel.SelectedFloorLevel))
                         {
                             ViewModel.SelectedFloorLevel = MapViewModel.DefaultFloorLevel;
@@ -293,12 +291,6 @@ namespace IndoorRouting.IndoorTest
                     DismissFloorsTableView();
                 }
             }
-        }
-
-        private void SelectItem(object sender, ItemSelectedEventArgs e)
-        {
-            var listViewUsed = (ListView)sender;
-            var selectedItem = listViewUsed.SelectedItem;
         }
 
         private void FloorListView_TableRowSelected(object sender, ItemClickEventArgs e)
