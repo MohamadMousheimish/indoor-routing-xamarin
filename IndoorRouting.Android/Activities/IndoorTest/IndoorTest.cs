@@ -86,12 +86,11 @@ namespace IndoorRouting.IndoorTest
             var relativeLayout = new RelativeLayout(this);
             var informationParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
             var root = new LinearLayout(this) { Orientation = Orientation.Vertical };
-            var floorLayoutParams = new RelativeLayout.LayoutParams(250, 250);
+            var floorLayoutParams = new RelativeLayout.LayoutParams(250, ViewGroup.LayoutParams.WrapContent);
             var infoLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
             var searchBoxParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             var searchViewParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             var mapParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
-            var floorsListParams = new RelativeLayout.LayoutParams(DpToPx(35), DpToPx(250));
 
 
             _mainTextView = new TextView(this);
@@ -350,9 +349,6 @@ namespace IndoorRouting.IndoorTest
                 // Create an empty array adapter
                 var adapter = new ArrayAdapter(this, Resource.Layout.SimpleSpinnerItem, new List<string>());
                 _searchListView.Adapter = adapter;
-
-                // Apply the adapter
-                _mySearchBox.Adapter = adapter;
             }
         }
 
