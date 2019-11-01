@@ -63,7 +63,7 @@
     <Reference Include="Mono.Android" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Activities\IndoorTest\IndoorTest.cs" />
+    <Compile Include="Activities\MapViewActivity.cs" />
     <Compile Include="Helpers\NetworkReachability.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />

@@ -34,7 +34,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static Android.Widget.AdapterView;
 
-namespace IndoorRouting.IndoorTest
+namespace IndoorRouting.MapViewActivity
 {
     [Activity(ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize)]
     [Sample("Open Mobile Map (Map Package)",
@@ -42,7 +42,7 @@ namespace IndoorRouting.IndoorTest
             "This sample demonstrate how to open a map from a mobile map package",
             "The map package will be downloaded from an ArcGIS online portal automatically")]
     [OfflineData("52346d5fc4c348589f976b6a279ec3e6")]
-    public partial class IndoorTest : Activity
+    public partial class MapViewActivity : Activity
     {
 
         // Hold references to the UI Controls
@@ -59,7 +59,7 @@ namespace IndoorRouting.IndoorTest
         /// </summary>
         private MapViewModel ViewModel { get; set; }
 
-        public IndoorTest() : base()
+        public MapViewActivity() : base()
         {
             ViewModel = new MapViewModel();
         }
