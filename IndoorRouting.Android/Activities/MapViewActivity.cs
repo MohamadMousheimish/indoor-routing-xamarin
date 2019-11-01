@@ -1,5 +1,6 @@
 ﻿using Android;
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
 using Android.Graphics.Drawables;
@@ -14,6 +15,7 @@ using Android.Util;
 using Android.Views;
 using Android.Widget;
 using Esri.ArcGISRuntime;
+using Esri.ArcGISRuntime.Data;
 using Esri.ArcGISRuntime.Geometry;
 using Esri.ArcGISRuntime.Location;
 using Esri.ArcGISRuntime.Mapping;
@@ -22,6 +24,7 @@ using Esri.ArcGISRuntime.Symbology;
 using Esri.ArcGISRuntime.Tasks.Geocoding;
 using Esri.ArcGISRuntime.UI;
 using Esri.ArcGISRuntime.UI.Controls;
+using IndoorRouting.Android.Activities;
 using IndoorRouting.Attributes;
 using IndoorRouting.Managers;
 using System;
@@ -45,7 +48,8 @@ namespace IndoorRouting.MapViewActivity
     public partial class MapViewActivity : Activity
     {
 
-        // Hold references to the UI Controls
+        #region UI Elements
+        
         private MapView _myMapView;
         private AutoCompleteTextView _mySearchBox;
         private ListView _searchListView;
@@ -53,11 +57,28 @@ namespace IndoorRouting.MapViewActivity
         private LinearLayout _informationLayout;
         private TextView _mainTextView;
         private TextView _secondaryTextView;
+        private ImageView _settingImageView;
+
+        #endregion
+
+        #region Activity Properties
 
         /// <summary>
         /// Gets or sets the map view model containing the common logic for dealing with the map
         /// </summary>
         private MapViewModel ViewModel { get; set; }
+
+        /// <summary>
+        /// Gets or sets from location feature
+        /// </summary>
+        public Feature FromLocationFeature { get; set; }
+
+        /// <summary>
+        /// Gets or sets to location feature
+        /// </summary>
+        public Feature ToLocationFeature { get; set; }
+
+        #endregion
 
         public MapViewActivity() : base()
         {
@@ -88,13 +109,12 @@ namespace IndoorRouting.MapViewActivity
             var root = new LinearLayout(this) { Orientation = Orientation.Vertical };
             var relativeLayout = new RelativeLayout(this);
             var floorsLayout = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            var topBarLayout = new LinearLayout(this) { Orientation = Orientation.Horizontal };
             var informationParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
             var floorLayoutParams = new RelativeLayout.LayoutParams(250, ViewGroup.LayoutParams.WrapContent);
             var infoLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
-            var searchBoxParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             var searchViewParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             var mapParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
-
 
             _mainTextView = new TextView(this);
             _secondaryTextView = new TextView(this);
@@ -103,6 +123,8 @@ namespace IndoorRouting.MapViewActivity
             _informationLayout.AddView(_mainTextView, informationParams);
             _informationLayout.AddView(_secondaryTextView, informationParams);
 
+            _settingImageView = new ImageView(this);
+            _settingImageView.SetImageResource(Resource.Drawable.IcMenuManage);
 
             _floorsTableView = new ListView(this)
             {
@@ -130,7 +152,6 @@ namespace IndoorRouting.MapViewActivity
 
             // Disable the buttons and search bar until geocoder is ready
             _mySearchBox.Enabled = false;
-            searchBoxParams.AddRule(LayoutRules.AlignParentTop);
 
             //Auto Complete Drop Down List View
             _searchListView = new ListView(this);
@@ -158,15 +179,26 @@ namespace IndoorRouting.MapViewActivity
             };
             _myMapView.GraphicsOverlays.Add(pinsGraphicOverlay);
 
+            _settingImageView.SetPadding(0, DpToPx(10), 0, 0);
+            _settingImageView.Clickable = true;
+            _settingImageView.Click += SettingImage_Clicked;
+            topBarLayout.AddView(_settingImageView, new ViewGroup.LayoutParams(DpToPx(40), DpToPx(40)));
+            topBarLayout.AddView(_mySearchBox, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent));
             relativeLayout.AddView(_myMapView, mapParams);
             relativeLayout.AddView(floorsLayout, floorLayoutParams);
             relativeLayout.AddView(_informationLayout, infoLayoutParams);
 
-            root.AddView(_mySearchBox);
+            root.AddView(topBarLayout);
             root.AddView(_searchListView);
             root.AddView(relativeLayout);
 
             SetContentView(root);
+        }
+
+        private void SettingImage_Clicked(object sender, EventArgs e)
+        {
+            var settingIntent = new Intent(this, typeof(SettingsActivity));
+            StartActivity(settingIntent);
         }
 
         private async void MapView_NavigationCompleted(object sender, EventArgs e)
@@ -205,12 +237,39 @@ namespace IndoorRouting.MapViewActivity
                 //Identify a layer using MapView, passing in the layer, the tap point, tolerance, types to return and max result
                 var idResult = await _myMapView.IdentifyLayerAsync(layer, tapScreenPoint, pixelTolerance, returnPopusOnly, maxResults);
                 var identifiedResult = idResult.GeoElements.First();
-                var pinGraphic = await GraphicForPoint(identifiedResult.Geometry.Extent.GetCenter());
+                var pin = await GraphicForPoint(identifiedResult.Geometry.Extent.GetCenter(), "pin_blue.png");
 
                 // Add pin to mapview
                 var graphicsOverlay = _myMapView.GraphicsOverlays["PinsGraphicsOverlay"];
-                graphicsOverlay.Graphics.Clear();
-                graphicsOverlay.Graphics.Add(pinGraphic);
+                if (AppSettings.CurrentSettings != null && AppSettings.CurrentSettings.IsRoutingEnabled)
+                {
+                    if (graphicsOverlay.Graphics.Any())
+                    {
+                        if(graphicsOverlay.Graphics.Count == 2)
+                        {
+                            graphicsOverlay.Graphics.Remove(graphicsOverlay.Graphics.Last());
+                            var endPin = await GraphicForPoint(identifiedResult.Geometry.Extent.GetCenter(), "pin_red.png");
+                            graphicsOverlay.Graphics.Add(endPin);
+                        }
+                        else
+                        {
+                            var startPin = await GraphicForPoint(identifiedResult.Geometry.Extent.GetCenter(), "pin_green.png");
+                            var endPin = await GraphicForPoint(identifiedResult.Geometry.Extent.GetCenter(), "pin_red.png");
+                            graphicsOverlay.Graphics.First().Symbol = startPin.Symbol;
+                            graphicsOverlay.Graphics.Add(endPin);
+                        }
+                    }
+                    else
+                    {
+                        var startPin = await GraphicForPoint(identifiedResult.Geometry.Extent.GetCenter(), "pin_green.png");
+                        graphicsOverlay.Graphics.Add(startPin);
+                    }
+                }
+                else
+                {
+                    graphicsOverlay.Graphics.Clear();
+                    graphicsOverlay.Graphics.Add(pin);
+                }
 
                 // Get room attribute from the settings. First attribute should be set as the searchable one
                 var roomAttribute = AppSettings.CurrentSettings.ContactCardDisplayFields[0];
@@ -379,7 +438,7 @@ namespace IndoorRouting.MapViewActivity
             if (geocodeResult != null)
             {
 
-                var pinGraphic = await GraphicForPoint(geocodeResult.DisplayLocation);
+                var pinGraphic = await GraphicForPoint(geocodeResult.DisplayLocation, "pin_blue.png");
                 // Add pin to map
                 var graphicsOverlay = _myMapView.GraphicsOverlays["PinsGraphicsOverlay"];
                 graphicsOverlay.Graphics.Clear();
@@ -389,7 +448,7 @@ namespace IndoorRouting.MapViewActivity
             }
         }
 
-        private async Task<Graphic> GraphicForPoint(MapPoint point)
+        private async Task<Graphic> GraphicForPoint(MapPoint point, string imageName)
         {
             // Get current assembly that contains the image.
             var currentAssembly = Assembly.GetExecutingAssembly();
@@ -397,7 +456,7 @@ namespace IndoorRouting.MapViewActivity
 
             // Get image as a stream from the resources.
             // Picture is defined as EmbeddedResource and DoNotCopy.
-            var resourceStream = currentAssembly.GetManifestResourceStream("IndoorRouting.Android.Resources.drawable.pin_blue.png");
+            var resourceStream = currentAssembly.GetManifestResourceStream($"IndoorRouting.Android.Resources.drawable.{imageName}");
 
             if (resourceStream != null)
             {
