@@ -22,6 +22,7 @@ using Esri.ArcGISRuntime.Mapping;
 using Esri.ArcGISRuntime.Portal;
 using Esri.ArcGISRuntime.Symbology;
 using Esri.ArcGISRuntime.Tasks.Geocoding;
+using Esri.ArcGISRuntime.Tasks.NetworkAnalysis;
 using Esri.ArcGISRuntime.UI;
 using Esri.ArcGISRuntime.UI.Controls;
 using IndoorRouting.Android.Activities;
@@ -54,9 +55,12 @@ namespace IndoorRouting.MapViewActivity
         private AutoCompleteTextView _mySearchBox;
         private ListView _searchListView;
         private ListView _floorsTableView;
-        private LinearLayout _informationLayout;
-        private TextView _mainTextView;
-        private TextView _secondaryTextView;
+        private LinearLayout _firstInformationLayout;
+        private LinearLayout _secondInformationLayout;
+        private TextView _firstTabMainTextView;
+        private TextView _firstTabSecondaryTextView;
+        private TextView _secondTabMainTextView;
+        private TextView _secondTabSecondaryTextView;
         private ImageView _settingImageView;
 
         #endregion
@@ -77,6 +81,20 @@ namespace IndoorRouting.MapViewActivity
         /// Gets or sets to location feature
         /// </summary>
         public Feature ToLocationFeature { get; set; }
+
+        /// <summary>
+        /// The route.
+        /// </summary>
+        private RouteResult route;
+
+        /// <summary>
+        /// Gets or sets the route
+        /// </summary>
+        public RouteResult Route { get{ return route; } set { route = value; OnRouteChangedAsync(); } }
+
+        public string FromLocationString { get; set; }
+
+        public string ToLocationString { get; set; }
 
         #endregion
 
@@ -110,18 +128,26 @@ namespace IndoorRouting.MapViewActivity
             var relativeLayout = new RelativeLayout(this);
             var floorsLayout = new LinearLayout(this) { Orientation = Orientation.Vertical };
             var topBarLayout = new LinearLayout(this) { Orientation = Orientation.Horizontal };
-            var informationParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+            var informationLayout = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+            var firstInformationLayout = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+            var secondInformationLayout = new LinearLayout(this) { Orientation = Orientation.Horizontal };
             var floorLayoutParams = new RelativeLayout.LayoutParams(250, ViewGroup.LayoutParams.WrapContent);
             var infoLayoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
             var searchViewParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             var mapParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
 
-            _mainTextView = new TextView(this);
-            _secondaryTextView = new TextView(this);
+            _firstTabMainTextView = new TextView(this);
+            _firstTabSecondaryTextView = new TextView(this);
+            _secondTabMainTextView = new TextView(this);
+            _secondTabSecondaryTextView= new TextView(this);
 
-            _informationLayout = new LinearLayout(this) { Orientation = Orientation.Vertical, Visibility = ViewStates.Gone };
-            _informationLayout.AddView(_mainTextView, informationParams);
-            _informationLayout.AddView(_secondaryTextView, informationParams);
+            _firstInformationLayout = new LinearLayout(this) { Orientation = Orientation.Vertical, Visibility = ViewStates.Gone };
+            _firstInformationLayout.AddView(_firstTabMainTextView, infoLayoutParams);
+            _firstInformationLayout.AddView(_firstTabSecondaryTextView, infoLayoutParams);
+
+            _secondInformationLayout = new LinearLayout(this) { Orientation = Orientation.Vertical, Visibility = ViewStates.Gone };
+            _secondInformationLayout.AddView(_secondTabMainTextView, infoLayoutParams);
+            _secondInformationLayout.AddView(_secondTabSecondaryTextView, infoLayoutParams);
 
             _settingImageView = new ImageView(this);
             _settingImageView.SetImageResource(Resource.Drawable.IcMenuManage);
@@ -143,8 +169,10 @@ namespace IndoorRouting.MapViewActivity
             floorsLayout.SetPadding(75, 0, 0, 0);
 
             infoLayoutParams.AddRule(LayoutRules.AlignParentBottom);
-            _informationLayout.SetBackgroundColor(Color.LightGray);
-
+            _firstInformationLayout.SetBackgroundColor(Color.FloralWhite);
+            _firstInformationLayout.SetPadding(0, 0, 50, 0);
+            _secondInformationLayout.SetBackgroundColor(Color.FloralWhite);
+            _secondInformationLayout.SetPadding(50, 0, 0, 0);
             _mySearchBox = new AutoCompleteTextView(this) { Hint = "Search rooms or people..." };
 
             // Disable multi-line search
@@ -177,7 +205,13 @@ namespace IndoorRouting.MapViewActivity
             {
                 Id = "PinsGraphicsOverlay"
             };
+            var routeGraphicOverlay = new GraphicsOverlay
+            {
+                Id = "RouteGraphicsOverlay"
+            };
+            
             _myMapView.GraphicsOverlays.Add(pinsGraphicOverlay);
+            _myMapView.GraphicsOverlays.Add(routeGraphicOverlay);
 
             _settingImageView.SetPadding(0, DpToPx(10), 0, 0);
             _settingImageView.Clickable = true;
@@ -186,7 +220,12 @@ namespace IndoorRouting.MapViewActivity
             topBarLayout.AddView(_mySearchBox, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent));
             relativeLayout.AddView(_myMapView, mapParams);
             relativeLayout.AddView(floorsLayout, floorLayoutParams);
-            relativeLayout.AddView(_informationLayout, infoLayoutParams);
+            firstInformationLayout.AddView(_firstInformationLayout);
+            secondInformationLayout.AddView(_secondInformationLayout);
+            informationLayout.SetPadding(75, 0, 0, 250);
+            informationLayout.AddView(firstInformationLayout);
+            informationLayout.AddView(secondInformationLayout);
+            relativeLayout.AddView(informationLayout, infoLayoutParams);
 
             root.AddView(topBarLayout);
             root.AddView(_searchListView);
@@ -283,23 +322,71 @@ namespace IndoorRouting.MapViewActivity
                         var employeeName = identifiedResult.Attributes[employeeNameAttribute];
                         employeeNameLabel = employeeName as string ?? string.Empty;
                     }
-
                     ShowInformationCard(roomNumber.ToString(), employeeNameLabel.ToString());
-                }
+                    if(!string.IsNullOrEmpty(_firstTabMainTextView.Text) && !string.IsNullOrWhiteSpace(_secondTabMainTextView.Text))
+                    {
+                        try
+                        {
+                            FromLocationFeature = await LocationViewModel.Instance.GetRoomFeatureAsync(FromLocationString);
+                            ToLocationFeature = await LocationViewModel.Instance.GetRoomFeatureAsync(ToLocationString);
 
+                            var fromLocationPoint = FromLocationFeature.Geometry.Extent.GetCenter();
+                            var toLocationPoint = ToLocationFeature.Geometry.Extent.GetCenter();
+
+                            var route = await LocationViewModel.Instance.GetRequestedRouteAsync(fromLocationPoint, toLocationPoint);
+                            Route = route;
+                        }
+                        catch
+                        {
+                            Route = null;
+                        }
+                    }
+                }
             }
             catch
             {
+                _myMapView.GraphicsOverlays["RouteGraphicsOverlay"].Graphics.Clear();
                 _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].Graphics.Clear();
-                _informationLayout.Visibility = ViewStates.Gone;
+                _firstInformationLayout.Visibility = ViewStates.Gone;
+                _secondInformationLayout.Visibility = ViewStates.Gone;
+                _firstTabMainTextView.Text = null;
+                _secondTabMainTextView.Text = null;
+                _firstTabSecondaryTextView.Text = null;
+                _secondTabSecondaryTextView.Text = null;
             }
         }
 
         private void ShowInformationCard(string mainLabel, string secondaryLabel)
         {
-            _mainTextView.Text = mainLabel;
-            _secondaryTextView.Text = secondaryLabel;
-            _informationLayout.Visibility = ViewStates.Visible;
+            var graphicsOverlay = _myMapView.GraphicsOverlays["PinsGraphicsOverlay"];
+            if(graphicsOverlay != null && graphicsOverlay.Graphics != null)
+            {
+                if(graphicsOverlay.Graphics.Count > 1)
+                {
+                    ToLocationString = mainLabel;
+                    if (!_firstTabMainTextView.Text.Contains("From:"))
+                    {
+                        _firstTabMainTextView.Text = $"From: {_firstTabMainTextView.Text}";
+                    }
+                    _secondTabMainTextView.Text = $"To: {mainLabel}";
+                    _secondTabSecondaryTextView.Text = secondaryLabel;
+                    _secondInformationLayout.Visibility = ViewStates.Visible;
+                }
+                else
+                {
+                    FromLocationString = mainLabel;
+                    if (AppSettings.CurrentSettings.IsRoutingEnabled)
+                    {
+                        _firstTabMainTextView.Text = $"From: {mainLabel}";
+                    }
+                    else
+                    {
+                        _firstTabMainTextView.Text = mainLabel;
+                    }
+                    _firstTabSecondaryTextView.Text = secondaryLabel;
+                    _firstInformationLayout.Visibility = ViewStates.Visible;
+                }
+            }
         }
 
         /// <summary>
@@ -354,16 +441,28 @@ namespace IndoorRouting.MapViewActivity
 
         private void FloorListView_TableRowSelected(object sender, ItemClickEventArgs e)
         {
-            // Remove pins from map
-            _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].Graphics.Clear();
-            _mySearchBox.Text = string.Empty;
-            _informationLayout.Visibility = ViewStates.Gone;
+            if (AppSettings.CurrentSettings.IsRoutingEnabled)
+            {
+                _mySearchBox.Text = string.Empty;
+                var selectedItem = (string)_floorsTableView.GetItemAtPosition(e.Position);
+                var listViewElement = (ListView)sender;
+                listViewElement.SetSelector(Resource.Color.HoloBlueLight);
+                ViewModel.SelectedFloorLevel = selectedItem;
+                ViewModel.SetFloorVisibility(true);
+            }
+            else
+            {
+                // Remove pins from map
+                _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].Graphics.Clear();
+                _mySearchBox.Text = string.Empty;
+                _firstInformationLayout.Visibility = ViewStates.Gone;
 
-            var selectedItem = (string)_floorsTableView.GetItemAtPosition(e.Position);
-            var listViewElement = (ListView)sender;
-            listViewElement.SetSelector(Resource.Color.HoloBlueLight); 
-            ViewModel.SelectedFloorLevel = selectedItem;
-            ViewModel.SetFloorVisibility(true);
+                var selectedItem = (string)_floorsTableView.GetItemAtPosition(e.Position);
+                var listViewElement = (ListView)sender;
+                listViewElement.SetSelector(Resource.Color.HoloBlueLight);
+                ViewModel.SelectedFloorLevel = selectedItem;
+                ViewModel.SetFloorVisibility(true);
+            }
         }
 
         /// <summary>
@@ -372,7 +471,12 @@ namespace IndoorRouting.MapViewActivity
         private void DismissFloorsTableView()
         {
             _floorsTableView.Visibility = ViewStates.Gone;
-            _informationLayout.Visibility = ViewStates.Gone;
+            _firstInformationLayout.Visibility = ViewStates.Gone;
+            _secondInformationLayout.Visibility = ViewStates.Gone;
+            _firstTabMainTextView.Text = null;
+            _secondTabMainTextView.Text = null;
+            _firstTabSecondaryTextView.Text = null;
+            _secondTabSecondaryTextView.Text = null;
         }
 
         private async Task GetSuggestionsFromLocatorAsync()
@@ -423,7 +527,7 @@ namespace IndoorRouting.MapViewActivity
                 _mySearchBox.Text = selectedFromList;
                 _mySearchBox.Adapter = new ArrayAdapter(this, Resource.Layout.SimpleSpinnerItem);
                 await GetSearchedFeatureAsync(_mySearchBox.Text);
-                _informationLayout.Visibility = ViewStates.Gone;
+                _firstInformationLayout.Visibility = ViewStates.Gone;
 
             }
         }
@@ -471,6 +575,25 @@ namespace IndoorRouting.MapViewActivity
                 return new Graphic(point, pinSymbol); 
             }
 
+            return null;
+        }
+
+        private async Task<PictureMarkerSymbol> CreatePictureMarkerSymbol(string imageName)
+        {
+
+            // Get current assembly that contains the image.
+            var currentAssembly = Assembly.GetExecutingAssembly();
+            // Get image as a stream from the resources.
+            // Picture is defined as EmbeddedResource and DoNotCopy.
+            var resourceStream = currentAssembly.GetManifestResourceStream($"IndoorRouting.Android.Resources.drawable.{imageName}");
+            if (resourceStream != null)
+            {
+                // Create new symbol using asynchronous factory method from stream.
+                var pinSymbol = await PictureMarkerSymbol.CreateAsync(resourceStream);
+                pinSymbol.Width = 35;
+                pinSymbol.Height = 35;
+                return pinSymbol;
+            }
             return null;
         }
 
@@ -523,6 +646,97 @@ namespace IndoorRouting.MapViewActivity
         private int DpToPx(int dp)
         {
             return (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, dp, Resources.DisplayMetrics);
+        }
+
+        /// <summary>
+        /// Fires when a new route is generated
+        /// </summary>
+        /// <returns></returns>
+        private async Task OnRouteChangedAsync()
+        {
+            if (Route != null)
+            {
+                // Get the route from the results
+                var newRoute = Route.Routes.FirstOrDefault();
+
+                // Create a picture marker symbol for start pin
+                var startMarker = await CreatePictureMarkerSymbol("circle_green.png");
+                var endMarker = await CreatePictureMarkerSymbol("circle_red.png");
+
+                if (newRoute != null)
+                {
+                    var walkTimeStringBuilder = new StringBuilder();
+
+                    // Add walk time and distance label
+                    if (newRoute.TotalTime.Hours > 0)
+                    {
+                        walkTimeStringBuilder.Append($"{newRoute.TotalTime.Hours} h {newRoute.TotalTime.Minutes} m");
+                    }
+                    else
+                    {
+                        walkTimeStringBuilder.Append($"{newRoute.TotalTime.Minutes + 1} m");
+                    }
+
+                    var tableSource = new List<Feature>() { FromLocationFeature, ToLocationFeature };
+
+                    // Create point graphics
+                    var startGraphic = new Graphic(newRoute.RouteGeometry.Parts.First().Points.First(), startMarker);
+                    var endGraphic = new Graphic(newRoute.RouteGeometry.Parts.Last().Points.Last(), endMarker);
+
+                    // Create a graphic to represent the route
+                    var routeSymbol = new SimpleLineSymbol()
+                    {
+                        Width = 5,
+                        Style = SimpleLineSymbolStyle.Solid,
+                        Color = System.Drawing.Color.FromArgb(127, 18, 121, 193)
+                    };
+
+                    var routeGraphic = new Graphic(newRoute.RouteGeometry, routeSymbol);
+
+                    // Add graphics to overlay
+                    _myMapView.GraphicsOverlays["RouteGraphicsOverlay"].Graphics.Clear();
+                    _myMapView.GraphicsOverlays["RouteGraphicsOverlay"].Graphics.Add(routeGraphic);
+                    _myMapView.GraphicsOverlays["RouteGraphicsOverlay"].Graphics.Add(startGraphic);
+                    _myMapView.GraphicsOverlays["RouteGraphicsOverlay"].Graphics.Add(endGraphic);
+
+                    // Hide the pins graphic overlay
+                    _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].IsVisible = false;
+
+                    try
+                    {
+                        await _myMapView.SetViewpointGeometryAsync(newRoute.RouteGeometry, 30);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                else
+                {
+                    _firstTabMainTextView.Text = "Routing Error";
+                    _firstTabSecondaryTextView.Text = "Please retry route";
+                    _secondInformationLayout.Visibility = ViewStates.Gone;
+                    _secondTabMainTextView.Text = null;
+                    _secondTabSecondaryTextView.Text = null;
+                }
+            }
+            else
+            {
+                _firstTabMainTextView.Text = "Routing Error";
+                _firstTabSecondaryTextView.Text = "Please retry route";
+                _secondInformationLayout.Visibility = ViewStates.Gone;
+                _secondTabMainTextView.Text = null;
+                _secondTabSecondaryTextView.Text = null;
+            }
+        }
+
+        /// <summary>
+        /// Clears the route and hides route card.
+        /// </summary>
+        private void ClearRoute()
+        {
+            _myMapView.GraphicsOverlays["RouteGraphicsOverlay"].Graphics.Clear();
+            _myMapView.GraphicsOverlays["PinsGraphicsOverlay"].IsVisible = true;
         }
     }
 }
